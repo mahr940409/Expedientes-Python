@@ -1,0 +1,455 @@
+{% extends "base.html" %}
+
+{% block title %}{{ personaje.nombre }} - Expediente Digital{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Inicio</a></li>
+                <li class="breadcrumb-item active">{{ personaje.nombre }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Información Principal del Personaje -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-user me-2"></i>
+                    {{ personaje.nombre }}
+                </h4>
+            </div>
+            <div class="card-body text-center">
+                {% if personaje.foto %}
+                    <img src="{{ url_for('static', filename=personaje.foto) }}" class="img-fluid rounded mb-3" alt="{{ personaje.nombre }}" style="max-height: 300px; object-fit: cover;">
+                {% else %}
+                    <div class="bg-light rounded d-flex align-items-center justify-content-center mb-3" style="height: 300px;">
+                        <i class="fas fa-user fa-5x text-muted"></i>
+                    </div>
+                {% endif %}
+                
+                <div class="row text-start">
+                    <div class="col-6">
+                        <p><strong><i class="fas fa-globe me-1"></i>Dimensión:</strong></p>
+                        {% if personaje.dimension == 'Universo' %}
+                        <p><strong><i class="fas fa-planet-ringed me-1"></i>Planeta:</strong></p>
+                        {% endif %}
+                        <p><strong><i class="fas fa-birthday-cake me-1"></i>Edad:</strong></p>
+                        <p><strong><i class="fas fa-crown me-1"></i>Rango:</strong></p>
+                        <p><strong><i class="fas fa-star me-1"></i>Nivel:</strong></p>
+                    </div>
+                    <div class="col-6">
+                        <p>{{ personaje.dimension }}</p>
+                        {% if personaje.dimension == 'Universo' %}
+                        <p>{{ personaje.planeta if personaje.planeta else 'N/A' }}</p>
+                        {% endif %}
+                        <p>{{ personaje.edad }} años</p>
+                        <p><span class="badge bg-warning text-dark">{{ personaje.rango }}</span></p>
+                        <p><span class="badge nivel-{{ personaje.nivel|lower }}">{{ personaje.nivel }}</span></p>
+                    </div>
+                </div>
+                
+                {% if personaje.dimension != 'Universo' and personaje.planeta %}
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Atención:</strong> Este personaje tiene un planeta asignado pero pertenece a "{{ personaje.dimension }}". 
+                    Los planetas solo se aplican a personajes del universo.
+                </div>
+                {% endif %}
+                
+                <hr>
+                
+                <h6><i class="fas fa-align-left me-1"></i>Descripción General</h6>
+                <p class="text-muted">{{ personaje.descripcion }}</p>
+                
+                <hr>
+                
+                <h6><i class="fas fa-fire me-1"></i>Elementos Controlados</h6>
+                {% if personaje.elementos %}
+                    {% set elementos_lista = personaje.elementos|from_json %}
+                    {% if elementos_lista %}
+                        <div class="mb-3">
+                            {% for elemento in elementos_lista %}
+                                <span class="elemento-badge elemento-{{ elemento|lower }}">{{ elemento }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No tiene elementos asignados</p>
+                    {% endif %}
+                {% else %}
+                    <p class="text-muted">No tiene elementos asignados</p>
+                {% endif %}
+                {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
+                <button type="button" class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#elementosModal">
+                    <i class="fas fa-edit me-1"></i>Editar Elementos
+                </button>
+                {% endif %}
+                
+                {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
+                <div class="d-flex justify-content-center gap-2 mt-3">
+                    <a href="{{ url_for('editar_personaje', personaje_id=personaje.id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-1"></i>Editar
+                    </a>
+                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="fas fa-trash me-1"></i>Eliminar
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Armas e Invocaciones -->
+    <div class="col-lg-8">
+        <!-- Armas -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-sword me-2"></i>
+                    Armas ({{ personaje.armas|length }})
+                </h5>
+                {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
+                <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#armaModal">
+                    <i class="fas fa-plus me-1"></i>Agregar Arma
+                </button>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if personaje.armas %}
+                    <div class="row row-cols-1 row-cols-md-2 g-3">
+                        {% for arma in personaje.armas %}
+                        <div class="col">
+                            <div class="card h-100">
+                                {% if arma.imagen %}
+                                    <img src="{{ url_for('static', filename=arma.imagen) }}" class="card-img-top" alt="{{ arma.nombre }}" style="height: 200px; object-fit: contain; background-color: #f8f9fa;">
+                                {% else %}
+                                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                        <i class="fas fa-sword fa-2x text-muted"></i>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ arma.nombre }}</h6>
+                                    <p class="card-text small">{{ arma.descripcion[:100] }}{% if arma.descripcion|length > 100 %}...{% endif %}</p>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-secondary">{{ arma.rango }}</span>
+                                    </div>
+                                </div>
+                                
+                                {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
+                                <div class="card-footer bg-transparent border-0">
+                                    <form action="{{ url_for('eliminar_arma', personaje_id=personaje.id, arma_id=arma.id) }}" method="POST" style="display: inline;">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm w-100" onclick="return confirm('¿Eliminar esta arma?')">
+                                            <i class="fas fa-trash me-1"></i>Eliminar
+                                        </button>
+                                    </form>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-sword fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No hay armas registradas para este personaje</p>
+                        {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#armaModal">
+                            <i class="fas fa-plus me-1"></i>Agregar Primera Arma
+                        </button>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Invocaciones -->
+        <div class="card">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-magic me-2"></i>
+                    Invocaciones ({{ personaje.invocaciones|length }})
+                </h5>
+                {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
+                <button type="button" class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#invocacionModal">
+                    <i class="fas fa-plus me-1"></i>Agregar Invocación
+                </button>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if personaje.invocaciones %}
+                    <div class="row row-cols-1 row-cols-md-2 g-3">
+                        {% for invocacion in personaje.invocaciones %}
+                        <div class="col">
+                            <div class="card h-100">
+                                {% if invocacion.imagen %}
+                                    <img src="{{ url_for('static', filename=invocacion.imagen) }}" class="card-img-top" alt="{{ invocacion.nombre }}" style="height: 200px; object-fit: contain; background-color: #f8f9fa;">
+                                {% else %}
+                                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                        <i class="fas fa-magic fa-2x text-muted"></i>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ invocacion.nombre }}</h6>
+                                    <p class="card-text small">{{ invocacion.descripcion[:100] }}{% if invocacion.descripcion|length > 100 %}...{% endif %}</p>
+                                    
+                                    <div class="mb-2">
+                                        <span class="badge bg-secondary me-1">{{ invocacion.rango }}</span>
+                                    </div>
+                                    
+                                    {% if invocacion.elementos %}
+                                        <div class="mb-2">
+                                            {% for elemento in invocacion.elementos %}
+                                                <span class="elemento-badge elemento-{{ elemento|lower }}">{{ elemento }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
+                                <div class="card-footer bg-transparent border-0">
+                                    <form action="{{ url_for('eliminar_invocacion', personaje_id=personaje.id, invocacion_id=invocacion.id) }}" method="POST" style="display: inline;">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm w-100" onclick="return confirm('¿Eliminar esta invocación?')">
+                                            <i class="fas fa-trash me-1"></i>Eliminar
+                                        </button>
+                                    </form>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-magic fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No hay invocaciones registradas para este personaje</p>
+                        {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#invocacionModal">
+                            <i class="fas fa-plus me-1"></i>Agregar Primera Invocación
+                        </button>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para eliminar personaje -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar al personaje <strong>{{ personaje.nombre }}</strong>?</p>
+                <p class="text-danger"><small>Esta acción eliminará también todas sus armas e invocaciones y no se puede deshacer.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form action="{{ url_for('eliminar_personaje', personaje_id=personaje.id) }}" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para agregar arma -->
+<div class="modal fade" id="armaModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-sword me-2"></i>
+                    Agregar Nueva Arma
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('agregar_arma', personaje_id=personaje.id) }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nombre_arma" class="form-label">Nombre del Arma *</label>
+                                <input type="text" class="form-control" id="nombre_arma" name="nombre_arma" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="rango_arma" class="form-label">Rango Asignado *</label>
+                                <input type="text" class="form-control" id="rango_arma" name="rango_arma" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nivel_arma" class="form-label">Nivel de Poder *</label>
+                                <select class="form-select" id="nivel_arma" name="nivel_arma" required>
+                                    <option value="">Seleccionar nivel</option>
+                                    <option value="D">D - Básico</option>
+                                    <option value="C">C - Intermedio</option>
+                                    <option value="B">B - Avanzado</option>
+                                    <option value="A">A - Experto</option>
+                                    <option value="S">S - Legendario</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="imagen_arma" class="form-label">Imagen del Arma</label>
+                                <input type="file" class="form-control" id="imagen_arma" name="imagen_arma" accept="image/*">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="descripcion_arma" class="form-label">Descripción de Funciones *</label>
+                        <textarea class="form-control" id="descripcion_arma" name="descripcion_arma" rows="3" required placeholder="Describe las funciones, habilidades y características del arma..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-plus me-1"></i>Agregar Arma
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para agregar invocación -->
+<div class="modal fade" id="invocacionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-magic me-2"></i>
+                    Agregar Nueva Invocación
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('agregar_invocacion', personaje_id=personaje.id) }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nombre_invocacion" class="form-label">Nombre de la Invocación *</label>
+                                <input type="text" class="form-control" id="nombre_invocacion" name="nombre_invocacion" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="imagen_invocacion" class="form-label">Imagen de la Invocación</label>
+                                <input type="file" class="form-control" id="imagen_invocacion" name="imagen_invocacion" accept="image/*">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="descripcion_invocacion" class="form-label">Descripción Detallada *</label>
+                        <textarea class="form-control" id="descripcion_invocacion" name="descripcion_invocacion" rows="3" required placeholder="Describe detalladamente la invocación, sus efectos y características..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-plus me-1"></i>Agregar Invocación
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para editar elementos -->
+<div class="modal fade" id="elementosModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-fire me-2"></i>
+                    Editar Elementos del Personaje
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('actualizar_elementos_personaje', personaje_id=personaje.id) }}" method="POST">
+                <div class="modal-body">
+                    <p class="text-muted mb-3">Selecciona los elementos que puede controlar este personaje:</p>
+                    <div id="elementos-container">
+                        <!-- Los elementos se cargarán dinámicamente aquí -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-save me-1"></i>Guardar Elementos
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Cargar elementos dinámicamente
+document.addEventListener('DOMContentLoaded', function() {
+    const elementosContainer = document.getElementById('elementos-container');
+    
+    console.log('🔄 Cargando elementos...');
+    
+    fetch('/api/elementos')
+        .then(response => {
+            console.log('📡 Respuesta de la API:', response.status);
+            return response.json();
+        })
+        .then(elementos => {
+            console.log('📋 Elementos recibidos:', elementos);
+            
+            // Limpiar contenedor
+            elementosContainer.innerHTML = '';
+            
+            elementos.forEach(elemento => {
+                console.log('➕ Agregando elemento:', elemento.nombre);
+                const div = document.createElement('div');
+                div.className = 'col-md-3 mb-2';
+                div.innerHTML = `
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="elementos" value="${elemento.nombre}" id="elemento_${elemento.id}">
+                        <label class="form-check-label" for="elemento_${elemento.id}">${elemento.nombre}</label>
+                    </div>
+                `;
+                elementosContainer.appendChild(div);
+            });
+            
+            console.log('✅ Elementos cargados correctamente');
+        })
+        .catch(error => {
+            console.error('❌ Error cargando elementos:', error);
+            elementosContainer.innerHTML = '<p class="text-muted">Error cargando elementos</p>';
+        });
+});
+
+// Agregar listener para el modal de elementos
+document.addEventListener('DOMContentLoaded', function() {
+    const elementosModal = document.getElementById('elementosModal');
+    if (elementosModal) {
+        elementosModal.addEventListener('show.bs.modal', function() {
+            console.log('🚀 Modal de elementos abierto');
+        });
+    }
+});
+</script>
+{% endblock %} 
