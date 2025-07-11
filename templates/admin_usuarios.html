@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Administrar Usuarios{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4">Administrar Usuarios</h1>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Lista de Usuarios</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Email</th>
+                                    <th>Nivel Actual</th>
+                                    <th>Personajes</th>
+                                    <th>Límite</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for usuario in usuarios %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ usuario.username }}</strong>
+                                        {% if usuario.es_admin %}
+                                            <span class="badge bg-danger ms-2">Admin</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ usuario.email or 'No especificado' }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'primary' if usuario.nivel_usuario == 'normal' else 'success' if usuario.nivel_usuario == 'premium' else 'warning' if usuario.nivel_usuario == 'vip' else 'danger' }}">
+                                            {{ usuario.nivel_usuario.title() }}
+                                        </span>
+                                    </td>
+                                    <td>{{ usuario.num_personajes }}</td>
+                                    <td>
+                                        {{ usuario.limite_actual }}
+                                        {% if usuario.slots_comprados > 0 %}
+                                            <br><small class="text-muted">(+{{ usuario.slots_comprados }} comprados)</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if usuario.num_personajes >= usuario.limite_actual %}
+                                            <span class="badge bg-danger">Límite alcanzado</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Puede crear más</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if not usuario.es_admin %}
+                                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalNivel{{ usuario.id }}">
+                                            Cambiar Nivel
+                                        </button>
+                                        {% else %}
+                                        <span class="text-muted">Admin</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                
+                                <!-- Modal para cambiar nivel -->
+                                {% if not usuario.es_admin %}
+                                <div class="modal fade" id="modalNivel{{ usuario.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Cambiar Nivel de {{ usuario.username }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form method="POST" action="{{ url_for('cambiar_nivel_usuario', usuario_id=usuario.id) }}">
+                                                <div class="modal-body">
+                                                    <p>Nivel actual: <strong>{{ usuario.nivel_usuario.title() }}</strong></p>
+                                                    <p>Personajes creados: <strong>{{ usuario.num_personajes }}/{{ usuario.limite_actual }}</strong></p>
+                                                    
+                                                    <div class="mb-3">
+                                                        <label for="nivel{{ usuario.id }}" class="form-label">Nuevo Nivel:</label>
+                                                        <select class="form-select" id="nivel{{ usuario.id }}" name="nivel" required>
+                                                            <option value="normal" {{ 'selected' if usuario.nivel_usuario == 'normal' }}>Normal (3 personajes)</option>
+                                                            <option value="premium" {{ 'selected' if usuario.nivel_usuario == 'premium' }}>Premium (5 personajes)</option>
+                                                            <option value="vip" {{ 'selected' if usuario.nivel_usuario == 'vip' }}>VIP (8 personajes)</option>
+                                                            <option value="legendario" {{ 'selected' if usuario.nivel_usuario == 'legendario' }}>Legendario (12 personajes)</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                    <button type="submit" class="btn btn-primary">Cambiar Nivel</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Información de Niveles</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h6 class="text-primary">Normal</h6>
+                                <p class="mb-1">3 personajes</p>
+                                <small class="text-muted">Nivel básico</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h6 class="text-success">Premium</h6>
+                                <p class="mb-1">5 personajes</p>
+                                <small class="text-muted">Nivel intermedio</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h6 class="text-warning">VIP</h6>
+                                <p class="mb-1">8 personajes</p>
+                                <small class="text-muted">Nivel avanzado</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h6 class="text-danger">Legendario</h6>
+                                <p class="mb-1">12 personajes</p>
+                                <small class="text-muted">Nivel máximo</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

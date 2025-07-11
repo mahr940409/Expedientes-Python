@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Mensaje: {{ mensaje.asunto }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">
+                        <i class="fas fa-envelope me-2"></i>
+                        {{ mensaje.asunto }}
+                    </h3>
+                    <div>
+                        {% if not mensaje.leido %}
+                            <span class="badge bg-warning text-dark">
+                                <i class="fas fa-envelope me-1"></i>Nuevo
+                            </span>
+                        {% else %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check me-1"></i>Leído
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                {% if mensaje.remitente.foto %}
+                                    <img src="{{ url_for('static', filename=mensaje.remitente.foto) }}" 
+                                         class="rounded-circle me-3" 
+                                         alt="{{ mensaje.remitente.nombre }}" 
+                                         style="width: 50px; height: 50px; object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                         style="width: 50px; height: 50px;">
+                                        <i class="fas fa-user text-white"></i>
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <h6 class="mb-0">De: {{ mensaje.remitente.nombre }}</h6>
+                                    <small class="text-muted">{{ mensaje.remitente.dimension }} - {{ mensaje.remitente.rango }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                {% if mensaje.destinatario.foto %}
+                                    <img src="{{ url_for('static', filename=mensaje.destinatario.foto) }}" 
+                                         class="rounded-circle me-3" 
+                                         alt="{{ mensaje.destinatario.nombre }}" 
+                                         style="width: 50px; height: 50px; object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                         style="width: 50px; height: 50px;">
+                                        <i class="fas fa-user text-white"></i>
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <h6 class="mb-0">Para: {{ mensaje.destinatario.nombre }}</h6>
+                                    <small class="text-muted">{{ mensaje.destinatario.dimension }} - {{ mensaje.destinatario.rango }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            Enviado el {{ mensaje.fecha_envio.strftime('%d/%m/%Y a las %H:%M') }}
+                        </small>
+                    </div>
+                    
+                    <div class="border rounded p-4 bg-light">
+                        <h5 class="mb-3">Contenido del Mensaje:</h5>
+                        <div class="mensaje-contenido">
+                            {{ mensaje.contenido|nl2br }}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a href="{{ url_for('ver_mensajes', personaje_id=mensaje.destinatario.id) }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Volver a Mensajes
+                            </a>
+                        </div>
+                        <div>
+                            {% if mensaje.destinatario.creador_id == session.user_id or session.es_admin %}
+                            <form method="POST" action="{{ url_for('eliminar_mensaje', mensaje_id=mensaje.id) }}" class="d-inline" onsubmit="return confirm('¿Eliminar este mensaje?')">
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-trash me-2"></i>Eliminar
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.mensaje-contenido {
+    white-space: pre-wrap;
+    line-height: 1.6;
+    font-size: 1.1em;
+}
+</style>
+{% endblock %} 

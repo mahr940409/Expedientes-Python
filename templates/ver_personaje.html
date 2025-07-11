@@ -14,6 +14,13 @@
     </div>
 </div>
 
+<div class="row mb-3">
+    <div class="col-md-6">
+        <h2>{{ personaje.nombre }}</h2>
+        <span class="badge bg-success"><i class="fas fa-coins"></i> {{ personaje.rastamonios }} rastamonios</span>
+    </div>
+</div>
+
 <div class="row">
     <!-- Información Principal del Personaje -->
     <div class="col-lg-4">
@@ -42,6 +49,7 @@
                         <p><strong><i class="fas fa-birthday-cake me-1"></i>Edad:</strong></p>
                         <p><strong><i class="fas fa-crown me-1"></i>Rango:</strong></p>
                         <p><strong><i class="fas fa-star me-1"></i>Nivel:</strong></p>
+                        <p><strong><i class="fas fa-bolt me-1"></i>Poder Total:</strong></p>
                     </div>
                     <div class="col-6">
                         <p>{{ personaje.dimension }}</p>
@@ -51,6 +59,7 @@
                         <p>{{ personaje.edad }} años</p>
                         <p><span class="badge bg-warning text-dark">{{ personaje.rango }}</span></p>
                         <p><span class="badge nivel-{{ personaje.nivel|lower }}">{{ personaje.nivel }}</span></p>
+                        <p><span class="badge bg-primary fs-6">{{ personaje.poder_total }} pts</span></p>
                     </div>
                 </div>
                 
@@ -95,6 +104,9 @@
                     <a href="{{ url_for('editar_personaje', personaje_id=personaje.id) }}" class="btn btn-outline-primary">
                         <i class="fas fa-edit me-1"></i>Editar
                     </a>
+                    <a href="{{ url_for('cambiar_imagen_personaje', personaje_id=personaje.id) }}" class="btn btn-outline-info">
+                        <i class="fas fa-image me-1"></i>Cambiar Imagen
+                    </a>
                     <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
                         <i class="fas fa-trash me-1"></i>Eliminar
                     </button>
@@ -114,9 +126,9 @@
                     Armas ({{ personaje.armas|length }})
                 </h5>
                 {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
-                <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#armaModal">
-                    <i class="fas fa-plus me-1"></i>Agregar Arma
-                </button>
+                <a href="{{ url_for('nueva_solicitud_arma', personaje_id=personaje.id) }}" class="btn btn-sm btn-outline-dark">
+                    <i class="fas fa-plus me-1"></i>Solicitar Arma
+                </a>
                 {% endif %}
             </div>
             <div class="card-body">
@@ -160,9 +172,9 @@
                         <i class="fas fa-sword fa-3x text-muted mb-3"></i>
                         <p class="text-muted">No hay armas registradas para este personaje</p>
                         {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#armaModal">
-                            <i class="fas fa-plus me-1"></i>Agregar Primera Arma
-                        </button>
+                        <a href="{{ url_for('nueva_solicitud_arma', personaje_id=personaje.id) }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Solicitar Primera Arma
+                        </a>
                         {% endif %}
                     </div>
                 {% endif %}
@@ -177,9 +189,9 @@
                     Invocaciones ({{ personaje.invocaciones|length }})
                 </h5>
                 {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
-                <button type="button" class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#invocacionModal">
-                    <i class="fas fa-plus me-1"></i>Agregar Invocación
-                </button>
+                <a href="{{ url_for('nueva_solicitud_invocacion', personaje_id=personaje.id) }}" class="btn btn-sm btn-outline-light">
+                    <i class="fas fa-plus me-1"></i>Solicitar Invocación
+                </a>
                 {% endif %}
             </div>
             <div class="card-body">
@@ -202,6 +214,7 @@
                                     
                                     <div class="mb-2">
                                         <span class="badge bg-secondary me-1">{{ invocacion.rango }}</span>
+                                        <span class="badge nivel-{{ invocacion.nivel|lower }}">{{ invocacion.nivel }}</span>
                                     </div>
                                     
                                     {% if invocacion.elementos %}
@@ -231,10 +244,87 @@
                         <i class="fas fa-magic fa-3x text-muted mb-3"></i>
                         <p class="text-muted">No hay invocaciones registradas para este personaje</p>
                         {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
-                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#invocacionModal">
-                            <i class="fas fa-plus me-1"></i>Agregar Primera Invocación
-                        </button>
+                        <a href="{{ url_for('nueva_solicitud_invocacion', personaje_id=personaje.id) }}" class="btn btn-success">
+                            <i class="fas fa-plus me-1"></i>Solicitar Primera Invocación
+                        </a>
                         {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Items Comprados en la Tienda -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-shopping-bag me-2"></i>
+                    Items de la Tienda ({{ personaje.compras|length }})
+                </h5>
+                <a href="{{ url_for('tienda') }}" class="btn btn-sm btn-outline-light">
+                    <i class="fas fa-store me-1"></i>Ir a la Tienda
+                </a>
+            </div>
+            <div class="card-body">
+                {% if personaje.compras %}
+                    <div class="row row-cols-1 row-cols-md-2 g-3">
+                        {% for compra in personaje.compras %}
+                        <div class="col">
+                            <div class="card h-100">
+                                {% if compra.item.imagen %}
+                                    <img src="{{ url_for('static', filename=compra.item.imagen) }}" class="card-img-top" alt="{{ compra.item.nombre }}" style="height: 200px; object-fit: cover;">
+                                {% else %}
+                                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                        <i class="fas fa-shopping-bag fa-2x text-muted"></i>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ compra.item.nombre }}</h6>
+                                    <p class="card-text small">{{ compra.item.descripcion[:100] }}{% if compra.item.descripcion and compra.item.descripcion|length > 100 %}...{% endif %}</p>
+                                    
+                                    <div class="mb-2">
+                                        <span class="badge bg-warning text-dark me-2">
+                                            <i class="fas fa-coins"></i> {{ compra.item.precio }} rastamonios
+                                        </span>
+                                        {% if compra.item.es_unico %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-star"></i> Único
+                                        </span>
+                                        {% endif %}
+                                        {% if compra.item.poder_adicional > 0 %}
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-fist-raised"></i> +{{ compra.item.poder_adicional }} poder
+                                        </span>
+                                        {% endif %}
+                                        {% if compra.cantidad > 1 %}
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-times"></i> x{{ compra.cantidad }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar me-1"></i>
+                                        Comprado: {{ compra.fecha.strftime('%d/%m/%Y %H:%M') }}
+                                    </small>
+                                </div>
+                                
+                                <div class="card-footer bg-transparent border-0">
+                                    <a href="{{ url_for('vender_item', personaje_id=personaje.id, compra_id=compra.id) }}" class="btn btn-outline-warning btn-sm w-100">
+                                        <i class="fas fa-dollar-sign me-1"></i>Vender Item
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No hay items comprados en la tienda</p>
+                        <a href="{{ url_for('tienda') }}" class="btn btn-info">
+                            <i class="fas fa-store me-1"></i>Ir a la Tienda
+                        </a>
                     </div>
                 {% endif %}
             </div>
@@ -264,115 +354,7 @@
     </div>
 </div>
 
-<!-- Modal para agregar arma -->
-<div class="modal fade" id="armaModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fas fa-sword me-2"></i>
-                    Agregar Nueva Arma
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form action="{{ url_for('agregar_arma', personaje_id=personaje.id) }}" method="POST" enctype="multipart/form-data">
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="nombre_arma" class="form-label">Nombre del Arma *</label>
-                                <input type="text" class="form-control" id="nombre_arma" name="nombre_arma" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="rango_arma" class="form-label">Rango Asignado *</label>
-                                <input type="text" class="form-control" id="rango_arma" name="rango_arma" required>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="nivel_arma" class="form-label">Nivel de Poder *</label>
-                                <select class="form-select" id="nivel_arma" name="nivel_arma" required>
-                                    <option value="">Seleccionar nivel</option>
-                                    <option value="D">D - Básico</option>
-                                    <option value="C">C - Intermedio</option>
-                                    <option value="B">B - Avanzado</option>
-                                    <option value="A">A - Experto</option>
-                                    <option value="S">S - Legendario</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="imagen_arma" class="form-label">Imagen del Arma</label>
-                                <input type="file" class="form-control" id="imagen_arma" name="imagen_arma" accept="image/*">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="descripcion_arma" class="form-label">Descripción de Funciones *</label>
-                        <textarea class="form-control" id="descripcion_arma" name="descripcion_arma" rows="3" required placeholder="Describe las funciones, habilidades y características del arma..."></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-warning">
-                        <i class="fas fa-plus me-1"></i>Agregar Arma
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
-<!-- Modal para agregar invocación -->
-<div class="modal fade" id="invocacionModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fas fa-magic me-2"></i>
-                    Agregar Nueva Invocación
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form action="{{ url_for('agregar_invocacion', personaje_id=personaje.id) }}" method="POST" enctype="multipart/form-data">
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="nombre_invocacion" class="form-label">Nombre de la Invocación *</label>
-                                <input type="text" class="form-control" id="nombre_invocacion" name="nombre_invocacion" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="imagen_invocacion" class="form-label">Imagen de la Invocación</label>
-                                <input type="file" class="form-control" id="imagen_invocacion" name="imagen_invocacion" accept="image/*">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="descripcion_invocacion" class="form-label">Descripción Detallada *</label>
-                        <textarea class="form-control" id="descripcion_invocacion" name="descripcion_invocacion" rows="3" required placeholder="Describe detalladamente la invocación, sus efectos y características..."></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-plus me-1"></i>Agregar Invocación
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 <!-- Modal para editar elementos -->
 <div class="modal fade" id="elementosModal" tabindex="-1">
@@ -387,12 +369,24 @@
             </div>
             <form action="{{ url_for('actualizar_elementos_personaje', personaje_id=personaje.id) }}" method="POST">
                 <div class="modal-body">
+                    <div class="alert alert-info mb-3">
+                        <h6><i class="fas fa-info-circle me-1"></i>Sistema de Elementos</h6>
+                        <ul class="mb-0 small">
+                            <li><span class="badge bg-success me-1"><i class="fas fa-check-circle me-1"></i>Básico</span> - Disponible inmediatamente</li>
+                            <li><span class="badge bg-warning me-1"><i class="fas fa-clock me-1"></i>Avanzado</span> - Requiere solicitud y aprobación</li>
+                        </ul>
+                    </div>
                     <p class="text-muted mb-3">Selecciona los elementos que puede controlar este personaje:</p>
                     <div id="elementos-container">
                         <!-- Los elementos se cargarán dinámicamente aquí -->
                     </div>
                 </div>
                 <div class="modal-footer">
+                    <div class="me-auto">
+                        <a href="{{ url_for('nueva_solicitud') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-clipboard-list me-1"></i>Solicitar Elementos Avanzados
+                        </a>
+                    </div>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-warning">
                         <i class="fas fa-save me-1"></i>Guardar Elementos
@@ -410,31 +404,57 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('🔄 Cargando elementos...');
     
-    fetch('/api/elementos')
+    fetch('/api/elementos-disponibles/{{ personaje.id }}')
         .then(response => {
             console.log('📡 Respuesta de la API:', response.status);
+            if (!response.ok) {
+                throw new Error('No tienes permisos para editar este personaje');
+            }
             return response.json();
         })
         .then(elementos => {
-            console.log('📋 Elementos recibidos:', elementos);
+            console.log('📋 Elementos disponibles recibidos:', elementos);
             
             // Limpiar contenedor
             elementosContainer.innerHTML = '';
+            
+            if (elementos.length === 0) {
+                elementosContainer.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            No hay elementos disponibles para este personaje.
+                        </div>
+                    </div>
+                `;
+                return;
+            }
             
             elementos.forEach(elemento => {
                 console.log('➕ Agregando elemento:', elemento.nombre);
                 const div = document.createElement('div');
                 div.className = 'col-md-3 mb-2';
+                
+                // Marcar elementos básicos vs avanzados
+                const badgeClass = elemento.es_basico ? 'bg-success' : 'bg-warning';
+                const badgeText = elemento.es_basico ? 'Básico' : 'Avanzado';
+                const badgeIcon = elemento.es_basico ? 'fa-check-circle' : 'fa-clock';
+                
                 div.innerHTML = `
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="elementos" value="${elemento.nombre}" id="elemento_${elemento.id}">
-                        <label class="form-check-label" for="elemento_${elemento.id}">${elemento.nombre}</label>
+                        <label class="form-check-label" for="elemento_${elemento.id}">
+                            ${elemento.nombre}
+                            <span class="badge ${badgeClass} ms-1">
+                                <i class="fas ${badgeIcon} me-1"></i>${badgeText}
+                            </span>
+                        </label>
                     </div>
                 `;
                 elementosContainer.appendChild(div);
             });
             
-            console.log('✅ Elementos cargados correctamente');
+            console.log('✅ Elementos disponibles cargados correctamente');
         })
         .catch(error => {
             console.error('❌ Error cargando elementos:', error);

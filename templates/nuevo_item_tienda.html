@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Nuevo Item - Tienda{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h3 class="mb-0">
+                    <i class="fas fa-plus me-2"></i>
+                    Crear Nuevo Item para la Tienda
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="nombre" class="form-label">
+                            <i class="fas fa-tag me-1"></i>Nombre del Item *
+                        </label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" required>
+                        <div class="form-text">Nombre del item que aparecerá en la tienda</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="descripcion" class="form-label">
+                            <i class="fas fa-align-left me-1"></i>Descripción
+                        </label>
+                        <textarea class="form-control" id="descripcion" name="descripcion" rows="4" placeholder="Describe las características y efectos del item..."></textarea>
+                        <div class="form-text">Descripción detallada del item y sus efectos</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="precio" class="form-label">
+                                    <i class="fas fa-coins me-1"></i>Precio en Rastamonios *
+                                </label>
+                                <input type="number" class="form-control" id="precio" name="precio" min="1" required>
+                                <div class="form-text">Costo del item en rastamonios</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="poder_adicional" class="form-label">
+                                    <i class="fas fa-fist-raised me-1"></i>Poder Adicional
+                                </label>
+                                <input type="number" class="form-control" id="poder_adicional" name="poder_adicional" min="0" value="0">
+                                <div class="form-text">Poder que suma al personaje al comprar este item</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="imagen" class="form-label">
+                            <i class="fas fa-image me-1"></i>Imagen del Item
+                        </label>
+                        <input type="file" class="form-control" id="imagen" name="imagen" accept="image/*">
+                        <div class="form-text">Imagen del item (PNG, JPG, JPEG, GIF, WEBP)</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="es_unico" name="es_unico">
+                                    <label class="form-check-label" for="es_unico">
+                                        <i class="fas fa-star me-1"></i>Item Único
+                                    </label>
+                                    <div class="form-text">Si está marcado, solo un personaje podrá comprar este item</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="stock" class="form-label">
+                                    <i class="fas fa-boxes me-1"></i>Stock
+                                </label>
+                                <input type="number" class="form-control" id="stock" name="stock" min="-1" value="-1">
+                                <div class="form-text">-1 = Ilimitado, 0+ = Cantidad disponible</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-2"></i>Crear Item
+                        </button>
+                        <a href="{{ url_for('admin_tienda') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

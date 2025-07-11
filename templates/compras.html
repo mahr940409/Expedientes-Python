@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Compras de {{ personaje.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2><i class="fas fa-shopping-bag"></i> Compras de {{ personaje.nombre }}</h2>
+    <div class="mb-3">
+        <a href="{{ url_for('tienda') }}" class="btn btn-secondary"><i class="fas fa-store"></i> Volver a la tienda</a>
+    </div>
+    {% if compras %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Ítem</th>
+                <th>Cantidad</th>
+                <th>Precio unitario</th>
+                <th>Total gastado</th>
+                <th>Fecha</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for compra in compras %}
+            <tr>
+                <td>{{ compra.item.nombre }}</td>
+                <td>{{ compra.cantidad }}</td>
+                <td>{{ compra.item.precio }}</td>
+                <td>{{ compra.cantidad * compra.item.precio }}</td>
+                <td>{{ compra.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> No hay compras registradas para este personaje.
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

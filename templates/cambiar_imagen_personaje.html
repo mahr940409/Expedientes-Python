@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Cambiar Imagen - {{ personaje.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-image me-2"></i>
+                        Cambiar Imagen de {{ personaje.nombre }}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Imagen Actual</h5>
+                            <div class="text-center">
+                                <img src="{{ url_for('static', filename=personaje.foto) }}" 
+                                     alt="{{ personaje.nombre }}" 
+                                     class="img-fluid rounded" 
+                                     style="max-height: 300px; max-width: 100%;">
+                                <p class="mt-2 text-muted">{{ personaje.nombre }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h5>Nueva Imagen</h5>
+                            <form method="POST" enctype="multipart/form-data">
+                                <div class="mb-3">
+                                    <label for="foto" class="form-label">
+                                        <i class="fas fa-upload me-1"></i>Seleccionar Nueva Imagen
+                                    </label>
+                                    <input type="file" class="form-control" id="foto" name="foto" accept="image/*" required>
+                                    <div class="form-text">
+                                        Formatos permitidos: PNG, JPG, JPEG, GIF, WEBP<br>
+                                        Tamaño recomendado: 300x400 píxeles o similar
+                                    </div>
+                                </div>
+                                
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-save me-2"></i>Actualizar Imagen
+                                    </button>
+                                    <a href="{{ url_for('ver_personaje', personaje_id=personaje.id) }}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-arrow-left me-2"></i>Cancelar
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Nota:</strong> Solo se cambiará la imagen del personaje. 
+                        Para modificar otros datos como nombre, descripción, etc., usa la opción "Editar Personaje".
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

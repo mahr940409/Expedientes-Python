@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Mensajería{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-envelope"></i> Sistema de Mensajería</h2>
+        <a href="{{ url_for('nuevo_mensaje') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Nuevo Mensaje
+        </a>
+    </div>
+
+    {% if personajes %}
+    <div class="row">
+        {% for personaje in personajes %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center">
+                    {% if personaje.foto %}
+                        <img src="{{ url_for('static', filename=personaje.foto) }}" 
+                             class="rounded-circle me-2" 
+                             alt="{{ personaje.nombre }}" 
+                             style="width: 40px; height: 40px; object-fit: cover;">
+                    {% else %}
+                        <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" 
+                             style="width: 40px; height: 40px;">
+                            <i class="fas fa-user text-white"></i>
+                        </div>
+                    {% endif %}
+                    <div>
+                        <h6 class="mb-0">{{ personaje.nombre }}</h6>
+                        <small class="text-muted">{{ personaje.dimension }}</small>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h5 class="text-primary">{{ personaje.mensajes_recibidos|length }}</h5>
+                            <small class="text-muted">Recibidos</small>
+                        </div>
+                        <div class="col-6">
+                            <h5 class="text-success">{{ personaje.mensajes_enviados|length }}</h5>
+                            <small class="text-muted">Enviados</small>
+                        </div>
+                    </div>
+                    
+                    {% set mensajes_no_leidos = personaje.mensajes_recibidos|selectattr('leido', 'equalto', false)|list %}
+                    {% if mensajes_no_leidos %}
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        <strong>{{ mensajes_no_leidos|length }}</strong> mensaje(s) no leído(s)
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('ver_mensajes', personaje_id=personaje.id) }}" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-envelope-open me-1"></i>Ver Mensajes
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        No tienes personajes para gestionar mensajes. 
+        <a href="{{ url_for('nuevo_personaje') }}" class="alert-link">Crea tu primer personaje</a>.
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Nuevo Mensaje{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-paper-plane me-2"></i>
+                        Enviar Nuevo Mensaje
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="remitente_id" class="form-label">
+                                        <i class="fas fa-user me-1"></i>Remitente *
+                                    </label>
+                                    <select class="form-select" id="remitente_id" name="remitente_id" required>
+                                        <option value="">Selecciona el remitente</option>
+                                        {% for personaje in personajes %}
+                                            <option value="{{ personaje.id }}">{{ personaje.nombre }} ({{ personaje.dimension }})</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="form-text">Personaje que enviará el mensaje</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="destinatario_id" class="form-label">
+                                        <i class="fas fa-user me-1"></i>Destinatario *
+                                    </label>
+                                    <select class="form-select" id="destinatario_id" name="destinatario_id" required>
+                                        <option value="">Selecciona el destinatario</option>
+                                        {% for personaje in todos_personajes %}
+                                            <option value="{{ personaje.id }}">{{ personaje.nombre }} ({{ personaje.dimension }})</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="form-text">Personaje que recibirá el mensaje</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="asunto" class="form-label">
+                                <i class="fas fa-tag me-1"></i>Asunto *
+                            </label>
+                            <input type="text" class="form-control" id="asunto" name="asunto" required maxlength="200">
+                            <div class="form-text">Título breve del mensaje</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="contenido" class="form-label">
+                                <i class="fas fa-align-left me-1"></i>Contenido *
+                            </label>
+                            <textarea class="form-control" id="contenido" name="contenido" rows="8" required placeholder="Escribe tu mensaje aquí..."></textarea>
+                            <div class="form-text">Contenido completo del mensaje</div>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i>Enviar Mensaje
+                            </button>
+                            <a href="{{ url_for('mensajes') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Evitar que se envíe el mismo personaje como remitente y destinatario
+document.addEventListener('DOMContentLoaded', function() {
+    const remitenteSelect = document.getElementById('remitente_id');
+    const destinatarioSelect = document.getElementById('destinatario_id');
+    
+    function updateDestinatarioOptions() {
+        const remitenteId = remitenteSelect.value;
+        const destinatarioOptions = destinatarioSelect.options;
+        
+        for (let i = 0; i < destinatarioOptions.length; i++) {
+            const option = destinatarioOptions[i];
+            if (option.value === remitenteId) {
+                option.disabled = true;
+                if (destinatarioSelect.value === remitenteId) {
+                    destinatarioSelect.value = '';
+                }
+            } else {
+                option.disabled = false;
+            }
+        }
+    }
+    
+    remitenteSelect.addEventListener('change', updateDestinatarioOptions);
+    updateDestinatarioOptions(); // Ejecutar al cargar la página
+});
+</script>
+{% endblock %} 

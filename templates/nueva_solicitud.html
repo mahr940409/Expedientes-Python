@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Solicitud de Elemento - Expedientes Digitales</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.95);
+        }
+        .card-header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            border: none;
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 25px;
+        }
+        .btn-secondary {
+            background: linear-gradient(45deg, #6c757d, #495057);
+            border: none;
+            border-radius: 25px;
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .navbar {
+            background: rgba(255,255,255,0.95) !important;
+            backdrop-filter: blur(10px);
+        }
+        .elemento-card {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .elemento-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+        .elemento-card.selected {
+            border-color: #667eea;
+            background-color: rgba(102, 126, 234, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">
+                <i class="fas fa-scroll me-2"></i>Expedientes Digitales
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">
+                            <i class="fas fa-home me-1"></i>Inicio
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('rankings') }}">
+                            <i class="fas fa-trophy me-1"></i>Rankings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('listar_planetas') }}">
+                            <i class="fas fa-globe me-1"></i>Planetas
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('listar_elementos') }}">
+                            <i class="fas fa-fire me-1"></i>Elementos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('listar_solicitudes') }}">
+                            <i class="fas fa-clipboard-list me-1"></i>Solicitudes
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    {% if session.user_id %}
+                        <li class="nav-item">
+                            <span class="navbar-text me-3">
+                                <i class="fas fa-user me-1"></i>{{ session.username }}
+                            </span>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('logout') }}">
+                                <i class="fas fa-sign-out-alt me-1"></i>Cerrar Sesión
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('login') }}">
+                                <i class="fas fa-sign-in-alt me-1"></i>Iniciar Sesión
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('register') }}">
+                                <i class="fas fa-user-plus me-1"></i>Registrarse
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Mensajes Flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0">
+                            <i class="fas fa-plus me-2"></i>Nueva Solicitud de Elemento
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="personaje_id" class="form-label">
+                                        <i class="fas fa-user-circle me-1"></i>Personaje
+                                    </label>
+                                    <select class="form-select" id="personaje_id" name="personaje_id" required>
+                                        <option value="">Selecciona un personaje</option>
+                                        {% for personaje in personajes %}
+                                            <option value="{{ personaje.id }}">
+                                                {{ personaje.nombre }} ({{ personaje.dimension }})
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="elemento_id" class="form-label">
+                                        <i class="fas fa-fire me-1"></i>Elemento Solicitado
+                                    </label>
+                                    <select class="form-select" id="elemento_id" name="elemento_id" required>
+                                        <option value="">Selecciona un elemento</option>
+                                        {% for elemento in elementos %}
+                                            <option value="{{ elemento.id }}">
+                                                {{ elemento.nombre }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="motivo" class="form-label">
+                                    <i class="fas fa-comment me-1"></i>Motivo de la Solicitud
+                                </label>
+                                <textarea class="form-control" id="motivo" name="motivo" rows="4" 
+                                          placeholder="Explica por qué necesitas este elemento para tu personaje..." required></textarea>
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Describe cómo este elemento complementa las habilidades de tu personaje.
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-info-circle me-1"></i>Información Importante</h6>
+                                <ul class="mb-0">
+                                    <li>Los elementos avanzados requieren aprobación del administrador</li>
+                                    <li>El proceso de revisión puede tomar algunos días</li>
+                                    <li>Una vez aprobado, el elemento se agregará automáticamente a tu personaje</li>
+                                    <li>Puedes solicitar múltiples elementos para el mismo personaje</li>
+                                </ul>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <a href="{{ url_for('listar_solicitudes') }}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left me-1"></i>Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane me-1"></i>Enviar Solicitud
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Información sobre elementos disponibles -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Elementos Disponibles
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-success">
+                                    <i class="fas fa-check-circle me-1"></i>Elementos Básicos (Disponibles Inmediatamente)
+                                </h6>
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-fire text-danger me-1"></i>Fuego</li>
+                                    <li><i class="fas fa-tint text-primary me-1"></i>Agua</li>
+                                    <li><i class="fas fa-wind text-info me-1"></i>Aire</li>
+                                    <li><i class="fas fa-mountain text-warning me-1"></i>Tierra</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-warning">
+                                    <i class="fas fa-clock me-1"></i>Elementos Avanzados (Requieren Aprobación)
+                                </h6>
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-bolt text-warning me-1"></i>Electricidad</li>
+                                    <li><i class="fas fa-snowflake text-info me-1"></i>Hielo</li>
+                                    <li><i class="fas fa-skull text-danger me-1"></i>Veneno</li>
+                                    <li><i class="fas fa-sun text-warning me-1"></i>Luz</li>
+                                    <li><i class="fas fa-moon text-dark me-1"></i>Oscuridad</li>
+                                    <li><i class="fas fa-dragon text-success me-1"></i>Rastamonio</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
