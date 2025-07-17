@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Administrar Misiones - Expediente Digital{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container text-center">
+        <h1 class="display-4 mb-3">
+            <i class="fas fa-tasks me-3"></i>
+            Administrar Misiones
+        </h1>
+        <p class="lead mb-4">Gestiona las misiones disponibles para los usuarios</p>
+        <a href="{{ url_for('nueva_mision') }}" class="btn btn-light btn-lg">
+            <i class="fas fa-plus me-2"></i>Crear Nueva Misión
+        </a>
+    </div>
+</div>
+
+<div class="container">
+    {% if misiones %}
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Misiones Existentes ({{ misiones|length }})
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Imagen</th>
+                                <th>Título</th>
+                                <th>Poder Mínimo</th>
+                                <th>Duración</th>
+                                <th>Recompensas</th>
+                                <th>Estado</th>
+                                <th>Fecha Creación</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mision in misiones %}
+                            <tr>
+                                <td>
+                                    {% if mision.imagen %}
+                                        <img src="{{ url_for('static', filename=mision.imagen) }}" alt="{{ mision.titulo }}" 
+                                             class="img-thumbnail" style="width: 60px; height: 60px; object-fit: contain; background-color: #f8f9fa;">
+                                    {% else %}
+                                        <div class="bg-light d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                            <i class="fas fa-quest text-muted"></i>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <strong>{{ mision.titulo or 'Sin título' }}</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        {% if mision.descripcion %}
+                                            {{ mision.descripcion[:100] }}{% if mision.descripcion|length > 100 %}...{% endif %}
+                                        {% else %}
+                                            Sin descripción
+                                        {% endif %}
+                                    </small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ mision.poder_minimo or 0 }}</span>
+                                </td>
+                                <td>
+                                    {% if mision.duracion_segundos %}
+                                        {% set minutos = mision.duracion_segundos // 60 %}
+                                        {% set segundos = mision.duracion_segundos % 60 %}
+                                        <span class="badge bg-secondary">
+                                            {% if minutos > 0 %}{{ minutos }}m {{ segundos }}s{% else %}{{ segundos }}s{% endif %}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Sin duración</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div>
+                                        <small class="text-success">
+                                            <i class="fas fa-coins me-1"></i>{{ mision.recompensa_rastamonios or 0 }} rastamonios
+                                        </small>
+                                    </div>
+                                    <div>
+                                        <small class="text-primary">
+                                            <i class="fas fa-fire me-1"></i>+{{ mision.recompensa_poder or 0 }} poder
+                                        </small>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if mision.activa %}
+                                        <span class="badge bg-success">Activa</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactiva</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {% if mision.fecha_creacion %}
+                                            {{ mision.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}
+                                        {% else %}
+                                            Sin fecha
+                                        {% endif %}
+                                    </small>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('editar_mision', mision_id=mision.id) }}" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form action="{{ url_for('toggle_mision', mision_id=mision.id) }}" method="POST" style="display: inline;">
+                                            <button type="submit" class="btn btn-outline-warning btn-sm">
+                                                {% if mision.activa %}
+                                                    <i class="fas fa-pause"></i>
+                                                {% else %}
+                                                    <i class="fas fa-play"></i>
+                                                {% endif %}
+                                            </button>
+                                        </form>
+                                        <button type="button" class="btn btn-outline-danger btn-sm delete-mision-btn" 
+                                                data-mision-id="{{ mision.id }}" 
+                                                data-mision-titulo="{{ mision.titulo or 'Sin título' }}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <div class="card">
+                <div class="card-body py-5">
+                    <i class="fas fa-tasks fa-5x text-muted mb-4"></i>
+                    <h3 class="text-muted">No hay misiones creadas</h3>
+                    <p class="text-muted mb-4">Comienza creando la primera misión para los usuarios</p>
+                    <a href="{{ url_for('nueva_mision') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus me-2"></i>Crear Primera Misión
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Modal de confirmación de eliminación (fuera de la tabla) -->
+<div class="modal fade" id="deleteMisionModal" tabindex="-1" aria-labelledby="deleteMisionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteMisionModalLabel">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar la misión <strong id="mision-titulo-modal"></strong>?</p>
+                <p class="text-danger"><small>Esta acción no se puede deshacer.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="delete-mision-form" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Manejar clics en botones de eliminar
+    document.querySelectorAll('.delete-mision-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var misionId = this.getAttribute('data-mision-id');
+            var misionTitulo = this.getAttribute('data-mision-titulo');
+            
+            // Actualizar el modal con la información de la misión
+            document.getElementById('mision-titulo-modal').textContent = misionTitulo;
+            document.getElementById('delete-mision-form').action = '/admin/mision/' + misionId + '/eliminar';
+            
+            // Mostrar el modal
+            var modal = new bootstrap.Modal(document.getElementById('deleteMisionModal'));
+            modal.show();
+        });
+    });
+});
+</script>
+{% endblock %} 

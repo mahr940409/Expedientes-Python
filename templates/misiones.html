@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block title %}Misiones - Expediente Digital{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container text-center">
+        <h1 class="display-4 mb-3">
+            <i class="fas fa-tasks me-3"></i>
+            Sistema de Misiones
+        </h1>
+        <p class="lead mb-4">Completa misiones para ganar poder y rastamonios</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Misiones en Progreso -->
+    {% set tiene_mision_activa = false %}
+    {% for personaje in personajes %}
+        {% if personaje.id in misiones_en_progreso %}
+            {% set tiene_mision_activa = true %}
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-play-circle me-2"></i>
+                        Misión en Progreso - {{ personaje.nombre }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% set mision_activa = misiones_en_progreso[personaje.id] %}
+                    <div class="row">
+                        <div class="col-md-2">
+                            {% if mision_activa.mision.imagen %}
+                                <img src="{{ url_for('static', filename=mision_activa.mision.imagen) }}" alt="{{ mision_activa.mision.titulo }}" 
+                                     class="img-fluid rounded" style="max-height: 120px; object-fit: contain; background-color: #f8f9fa;">
+                            {% else %}
+                                <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 120px;">
+                                    <i class="fas fa-quest fa-2x text-muted"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h6>{{ mision_activa.mision.titulo or 'Sin título' }}</h6>
+                            <p class="text-muted">
+                                {% if mision_activa.mision.descripcion %}
+                                    {{ mision_activa.mision.descripcion }}
+                                {% else %}
+                                    Sin descripción
+                                {% endif %}
+                            </p>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock me-1"></i>
+                                        Duración: 
+                                        {% if mision_activa.mision.duracion_segundos %}
+                                            {% set minutos = mision_activa.mision.duracion_segundos // 60 %}
+                                            {% set segundos = mision_activa.mision.duracion_segundos % 60 %}
+                                            {% if minutos > 0 %}{{ minutos }}m {{ segundos }}s{% else %}{{ segundos }}s{% endif %}
+                                        {% else %}
+                                            Sin duración
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted">
+                                        <i class="fas fa-coins me-1"></i>
+                                        Recompensa: {{ mision_activa.mision.recompensa_rastamonios or 0 }} rastamonios
+                                    </small>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted">
+                                        <i class="fas fa-fire me-1"></i>
+                                        Poder: +{{ mision_activa.mision.recompensa_poder or 0 }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <!-- Contador de tiempo prominente -->
+                            <div id="tiempo-restante-{{ personaje.id }}" class="mb-3" data-personaje-id="{{ personaje.id }}">
+                                <div class="text-center">
+                                    <div class="display-6 fw-bold text-primary mb-1">
+                                        <i class="fas fa-clock me-2"></i>
+                                        <span id="contador-{{ personaje.id }}">Calculando...</span>
+                                    </div>
+                                    <div class="small text-muted">Tiempo restante</div>
+                                </div>
+                            </div>
+                            <div class="btn-group" role="group">
+                                <form action="{{ url_for('completar_mision') }}" method="POST" style="display: inline;">
+                                    <input type="hidden" name="personaje_id" value="{{ personaje.id }}">
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <i class="fas fa-check me-1"></i>Completar
+                                    </button>
+                                </form>
+                                <form action="{{ url_for('abandonar_mision') }}" method="POST" style="display: inline;">
+                                    <input type="hidden" name="personaje_id" value="{{ personaje.id }}">
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que quieres abandonar esta misión?')">
+                                        <i class="fas fa-times me-1"></i>Abandonar
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+
+    <!-- Misiones Disponibles -->
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>
+                Misiones Disponibles
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if misiones %}
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                    {% for mision in misiones %}
+                        {% set ns = namespace(hay_personaje_elegible=false) %}
+                        {% for personaje in personajes %}
+                            {% if personaje.id not in misiones_en_progreso and personaje.calcular_poder() >= mision.poder_minimo %}
+                                {% set ns.hay_personaje_elegible = true %}
+                            {% endif %}
+                        {% endfor %}
+                        <div class="col">
+                            <div class="card h-100">
+                                {% if mision.imagen %}
+                                    <img src="{{ url_for('static', filename=mision.imagen) }}" class="card-img-top" alt="{{ mision.titulo }}" 
+                                         style="height: 200px; object-fit: contain; background-color: #f8f9fa;">
+                                {% else %}
+                                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                        <i class="fas fa-quest fa-3x text-muted"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ mision.titulo or 'Sin título' }}</h6>
+                                    <p class="card-text text-muted">
+                                        {% if mision.descripcion %}
+                                            {{ mision.descripcion }}
+                                        {% else %}
+                                            Sin descripción
+                                        {% endif %}
+                                    </p>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-6">
+                                            <small class="text-muted">
+                                                <i class="fas fa-shield-alt me-1"></i>
+                                                Poder mínimo: {{ mision.poder_minimo or 0 }}
+                                            </small>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">
+                                                <i class="fas fa-clock me-1"></i>
+                                                Duración: 
+                                                {% if mision.duracion_segundos %}
+                                                    {% set minutos = mision.duracion_segundos // 60 %}
+                                                    {% set segundos = mision.duracion_segundos % 60 %}
+                                                    {% if minutos > 0 %}{{ minutos }}m {{ segundos }}s{% else %}{{ segundos }}s{% endif %}
+                                                {% else %}
+                                                    Sin duración
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-6">
+                                            <small class="text-success">
+                                                <i class="fas fa-coins me-1"></i>
+                                                Recompensa: {{ mision.recompensa_rastamonios or 0 }} rastamonios
+                                            </small>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-primary">
+                                                <i class="fas fa-fire me-1"></i>
+                                                Poder: +{{ mision.recompensa_poder or 0 }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    
+                                    {# Formulario fuera de cualquier otro form #}
+                                    <form action="{{ url_for('aceptar_mision', mision_id=mision.id) }}" method="POST">
+                                        <div class="mb-3">
+                                            <label for="personaje_{{ mision.id }}" class="form-label">Seleccionar personaje:</label>
+                                            <select class="form-select" name="personaje_id" id="personaje_{{ mision.id }}" required>
+                                                <option value="">Elige un personaje...</option>
+                                                {% for personaje in personajes %}
+                                                    {% if personaje.id not in misiones_en_progreso %}
+                                                        {% set poder_personaje = personaje.calcular_poder() %}
+                                                        <option value="{{ personaje.id }}" {% if poder_personaje < mision.poder_minimo %}disabled{% endif %}>
+                                                            {{ personaje.nombre }} (Poder: {{ poder_personaje }})
+                                                            {% if poder_personaje < mision.poder_minimo %} - Insuficiente{% endif %}
+                                                        </option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary btn-sm w-100" {% if not ns.hay_personaje_elegible %}disabled{% endif %}>
+                                            <i class="fas fa-play me-1"></i>Aceptar Misión
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No hay misiones disponibles</h5>
+                    <p class="text-muted">El administrador aún no ha creado misiones.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Variable para controlar si hay un modal abierto
+let modalAbierto = false;
+
+// Detectar cuando se abre un modal
+document.addEventListener('show.bs.modal', function() {
+    modalAbierto = true;
+});
+
+// Detectar cuando se cierra un modal
+document.addEventListener('hidden.bs.modal', function() {
+    modalAbierto = false;
+});
+
+// Función para actualizar contadores de tiempo
+function actualizarContadores() {
+    // No actualizar si hay un modal abierto
+    if (modalAbierto) {
+        return;
+    }
+    
+    // Buscar todos los contenedores de tiempo restante
+    var contenedores = document.querySelectorAll('[data-personaje-id]');
+    
+    contenedores.forEach(function(contenedor) {
+        var personajeId = contenedor.getAttribute('data-personaje-id');
+        var contador = document.getElementById('contador-' + personajeId);
+        
+        if (contador) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '/api/mision/estado/' + personajeId, true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    try {
+                        var data = JSON.parse(xhr.responseText);
+                        
+                        if (data.estado === 'expirada') {
+                            contador.textContent = 'EXPIRADA';
+                            contador.className = 'display-6 fw-bold text-danger mb-1';
+                            contador.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>EXPIRADA';
+                            contenedor.querySelector('.small').textContent = '¡Completa ahora!';
+                        } else if (data.mision && data.mision.tiempo_restante !== undefined) {
+                            var tiempo = Math.max(0, Math.floor(data.mision.tiempo_restante));
+                            var minutos = Math.floor(tiempo / 60);
+                            var segundos = tiempo % 60;
+                            var tiempoStr = minutos + ':' + (segundos < 10 ? '0' : '') + segundos;
+                            
+                            var color = 'text-primary';
+                            var icono = 'fas fa-clock';
+                            
+                            if (tiempo <= 30) {
+                                color = 'text-danger';
+                                icono = 'fas fa-exclamation-triangle';
+                            } else if (tiempo <= 60) {
+                                color = 'text-warning';
+                                icono = 'fas fa-hourglass-end';
+                            } else if (tiempo <= 300) {
+                                color = 'text-info';
+                                icono = 'fas fa-hourglass-half';
+                            }
+                            
+                            contador.textContent = tiempoStr;
+                            contador.className = 'display-6 fw-bold ' + color + ' mb-1';
+                            contador.innerHTML = '<i class="' + icono + ' me-2"></i>' + tiempoStr;
+                            contenedor.querySelector('.small').textContent = 'Tiempo restante';
+                        }
+                    } catch (e) {
+                        console.error('Error al procesar respuesta:', e);
+                    }
+                }
+            };
+            xhr.send();
+        }
+    });
+}
+
+// Actualizar cada 5 segundos en lugar de cada segundo para reducir la carga
+setInterval(actualizarContadores, 5000);
+
+// Actualizar al cargar la página
+document.addEventListener('DOMContentLoaded', actualizarContadores);
+</script>
+{% endblock %} 

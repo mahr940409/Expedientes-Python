@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Detalle del Planeta{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-3"><i class="fas fa-globe"></i> {{ planeta.nombre }}</h2>
+    <div class="card mb-4">
+        <div class="card-body">
+            <p><strong>Dimensión:</strong> {{ planeta.dimension }}</p>
+            <p><strong>Descripción:</strong> {{ planeta.descripcion or 'Sin descripción' }}</p>
+        </div>
+    </div>
+
+    <h4 class="mb-3"><i class="fas fa-users"></i> Personajes en este planeta</h4>
+    {% if personajes_planeta %}
+        <div class="row">
+            {% for personaje in personajes_planeta %}
+            <div class="col-md-4 col-lg-3 mb-4">
+                <div class="card h-100 bg-dark text-light">
+                    <img src="{{ url_for('static', filename=personaje.foto) }}" class="card-img-top p-2" alt="{{ personaje.nombre }}" style="object-fit:contain; height:220px; background:#222; width:100%; border-radius:12px;">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ personaje.nombre }}</h5>
+                        <p class="mb-1"><strong>Nivel:</strong> {{ personaje.nivel_auto or personaje.nivel }}</p>
+                        <a href="{{ url_for('ver_personaje', personaje_id=personaje.id) }}" class="btn btn-primary btn-sm mt-2 w-100">
+                            Ver perfil
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">No hay personajes en este planeta.</div>
+    {% endif %}
+
+    {% if puede_gestionar and solicitudes_pendientes %}
+    <div class="card mb-4 border-warning">
+        <div class="card-header bg-warning text-dark">
+            <i class="fas fa-user-clock me-2"></i>Solicitudes pendientes de acceso
+        </div>
+        <div class="card-body">
+            <ul class="list-group">
+                {% for solicitud in solicitudes_pendientes %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="fas fa-user me-1"></i>
+                        <a href="{{ url_for('ver_personaje', personaje_id=solicitud.personaje_id) }}">{{ solicitud.personaje.nombre }}</a>
+                        <small class="text-muted">(Solicitado el {{ solicitud.fecha_solicitud.strftime('%d/%m/%Y %H:%M') }})</small>
+                    </span>
+                    <span>
+                        <form action="{{ url_for('aceptar_solicitud_planeta', solicitud_id=solicitud.id) }}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-check"></i> Aceptar</button>
+                        </form>
+                        <form action="{{ url_for('rechazar_solicitud_planeta', solicitud_id=solicitud.id) }}" method="post" class="d-inline ms-2">
+                            <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-times"></i> Rechazar</button>
+                        </form>
+                    </span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

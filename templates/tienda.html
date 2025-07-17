@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Tienda Rastamonio{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4"><i class="fas fa-store"></i> Tienda Rastamonio</h2>
+    <div class="alert alert-info">
+        <i class="fas fa-coins"></i> Selecciona un personaje para comprar y ver su saldo de <b>rastamonios</b>.
+        <br><i class="fas fa-info-circle"></i> <strong>Límite:</strong> Cada personaje puede tener máximo <b>33 items</b> en total.
+        <br><i class="fas fa-star"></i> <strong>Items Únicos:</strong> Los items únicos pueden ser vendidos por el personaje que los compró, estableciendo su propio precio de venta.
+        <br><i class="fas fa-boxes"></i> <strong>Stock:</strong> Los items normales pueden tener stock limitado. Al venderlos, el stock vuelve a estar disponible.
+    </div>
+    <div id="saldo-personaje" class="mb-4"></div>
+    <div class="row">
+        {% for item in items %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                {% if item.imagen %}
+                <img src="{{ url_for('static', filename=item.imagen) }}" class="card-img-top" alt="{{ item.nombre }}" style="height: 200px; object-fit: contain; background-color: #f8f9fa;">
+                {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="fas fa-image fa-3x text-muted"></i>
+                </div>
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ item.nombre }}</h5>
+                    <p class="card-text">{{ item.descripcion }}</p>
+                    <div class="mb-2">
+                        {% if item.es_unico %}
+                            {% set compra_en_venta = None %}
+                            {% for c in item.compras %}
+                                {% if c.en_venta %}
+                                    {% set compra_en_venta = c %}
+                                {% endif %}
+                            {% endfor %}
+                            <span class="badge bg-danger">
+                                <i class="fas fa-star"></i> Único
+                            </span>
+                            {% if compra_en_venta %}
+                                <span class="badge bg-warning text-dark me-2">
+                                    <i class="fas fa-tag"></i> {{ compra_en_venta.precio_venta }} rastamonios (precio de venta)
+                                </span>
+                                <span class="badge bg-info">
+                                    <i class="fas fa-user"></i> En venta por: {{ compra_en_venta.personaje.nombre }}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark me-2">
+                                    <i class="fas fa-coins"></i> {{ item.precio }} rastamonios
+                                </span>
+                            {% endif %}
+                        {% else %}
+                            <span class="badge bg-warning text-dark me-2">
+                                <i class="fas fa-coins"></i> {{ item.precio }} rastamonios
+                            </span>
+                            {% if item.stock >= 0 %}
+                                {% if item.stock > 0 %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-boxes"></i> Stock: {{ item.stock }}
+                                </span>
+                                {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-times-circle"></i> Agotado
+                                </span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-primary">
+                                    <i class="fas fa-infinity"></i> Ilimitado
+                                </span>
+                            {% endif %}
+                        {% endif %}
+                        {% if item.poder_adicional > 0 %}
+                        <span class="badge bg-info">
+                            <i class="fas fa-fist-raised"></i> +{{ item.poder_adicional }} poder
+                        </span>
+                        {% endif %}
+                    </div>
+                    <a href="{{ url_for('ver_item_tienda', item_id=item.id) }}" class="btn btn-primary w-100 mt-2">
+                        <i class="fas fa-eye"></i> Ver Detalle y Comprar
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+<script>
+function mostrarSaldo() {
+    var select = document.getElementById('personaje_id');
+    var saldoDiv = document.getElementById('saldo-personaje');
+    var saldo = select.options[select.selectedIndex]?.getAttribute('data-saldo');
+    var items = select.options[select.selectedIndex]?.getAttribute('data-items');
+    if (saldo) {
+        var html = '<b>Saldo actual:</b> ' + saldo + ' rastamonios';
+        if (items) {
+            html += ' | <b>Items actuales:</b> ' + items + '/33';
+            if (parseInt(items) >= 33) {
+                html += ' <span class="text-danger"><i class="fas fa-exclamation-triangle"></i> Límite alcanzado</span>';
+            }
+        }
+        saldoDiv.innerHTML = html;
+    } else {
+        saldoDiv.innerHTML = '';
+    }
+}
+</script>
+{% endblock %} 

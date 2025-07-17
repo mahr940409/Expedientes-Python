@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Crear Clan{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('listar_clanes') }}">Clanes</a></li>
+                    <li class="breadcrumb-item active">Crear Clan</li>
+                </ol>
+            </nav>
+            
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-plus me-2"></i>Crear Nuevo Clan
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <h5><i class="fas fa-exclamation-triangle"></i> Importante</h5>
+                        <ul class="mb-0">
+                            <li>Solo puedes crear un clan por personaje</li>
+                            <li>El personaje seleccionado será el líder del clan</li>
+                            <li>Una vez creado el clan, no podrás eliminarlo</li>
+                            <li>Elige cuidadosamente el nombre y la insignia</li>
+                        </ul>
+                    </div>
+                    
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="nombre" class="form-label">Nombre del Clan *</label>
+                                    <input type="text" class="form-control" id="nombre" name="nombre" required 
+                                           placeholder="Ej: Clan Uchiha, Clan Marley">
+                                    <div class="form-text">Elige un nombre único y representativo para tu clan.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="personaje_id" class="form-label">Personaje Líder *</label>
+                                    <select class="form-select" id="personaje_id" name="personaje_id" required>
+                                        <option value="">Seleccionar personaje...</option>
+                                        {% for personaje in personajes %}
+                                            {% if not personaje.clan_id %}
+                                            <option value="{{ personaje.id }}">{{ personaje.nombre }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                    <div class="form-text">Este personaje será el líder del clan.</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="descripcion" name="descripcion" rows="4" 
+                                      placeholder="Describe los objetivos, valores y estrategias de tu clan..."></textarea>
+                            <div class="form-text">Explica qué representa tu clan y qué buscan sus miembros.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="insignia" class="form-label">Insignia del Clan</label>
+                            <input type="file" class="form-control" id="insignia" name="insignia" 
+                                   accept="image/png,image/jpg,image/jpeg,image/gif,image/webp">
+                            <div class="form-text">Sube una imagen que represente a tu clan (opcional). Formatos: PNG, JPG, JPEG, GIF, WEBP</div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('listar_clanes') }}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-times me-1"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Crear Clan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

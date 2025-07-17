@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Ataques en Venta{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('ataques') }}">Ataques</a></li>
+                    <li class="breadcrumb-item active">En Venta</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="mb-0">
+                    <i class="fas fa-tags text-warning"></i>
+                    Ataques en Venta
+                </h1>
+                <a href="{{ url_for('ataques') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left"></i> Volver a Ataques
+                </a>
+            </div>
+            
+            {% if ataques_en_venta %}
+            <div class="row">
+                {% for ataque_personaje in ataques_en_venta %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 shadow-sm border-warning">
+                        {% if ataque_personaje.ataque.imagen %}
+                        <img src="{{ url_for('static', filename=ataque_personaje.ataque.imagen) }}" 
+                             class="card-img-top" alt="{{ ataque_personaje.ataque.nombre }}"
+                             style="height: 200px; object-fit: cover;">
+                        {% else %}
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                             style="height: 200px;">
+                            <i class="fas fa-fist-raised fa-3x text-muted"></i>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title text-primary">{{ ataque_personaje.ataque.nombre }}</h5>
+                            <p class="card-text text-muted">{{ ataque_personaje.ataque.descripcion }}</p>
+                            
+                            <div class="alert alert-info">
+                                <strong>Vendedor:</strong> {{ ataque_personaje.personaje.nombre }}
+                            </div>
+                            
+                            <div class="mt-auto">
+                                <div class="row text-center mb-3">
+                                    <div class="col-4">
+                                        <div class="bg-success text-white rounded p-2">
+                                            <i class="fas fa-bolt"></i>
+                                            <div class="fw-bold">{{ ataque_personaje.ataque.poder }}</div>
+                                            <small>Poder</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="bg-warning text-dark rounded p-2">
+                                            <i class="fas fa-coins"></i>
+                                            <div class="fw-bold">{{ ataque_personaje.precio_venta }}</div>
+                                            <small>Precio</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="bg-secondary text-white rounded p-2">
+                                            <i class="fas fa-calendar"></i>
+                                            <div class="fw-bold">{{ ataque_personaje.fecha_compra.strftime('%d/%m') }}</div>
+                                            <small>Comprado</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {% if personajes %}
+                                <form method="POST" action="{{ url_for('comprar_ataque_en_venta', ataque_personaje_id=ataque_personaje.id, personaje_id=0) }}" 
+                                      id="formComprar{{ ataque_personaje.id }}">
+                                    <div class="mb-3">
+                                        <label for="personaje_id_{{ ataque_personaje.id }}" class="form-label">Comprar para:</label>
+                                        <select class="form-select" name="personaje_id" id="personaje_id_{{ ataque_personaje.id }}" required>
+                                            <option value="">-- Selecciona un personaje --</option>
+                                            {% for personaje in personajes %}
+                                            <option value="{{ personaje.id }}" 
+                                                    data-rastamonios="{{ personaje.rastamonios }}"
+                                                    data-ataques="{{ personaje.ataques_comprados|length }}">
+                                                {{ personaje.nombre }} 
+                                                ({{ personaje.rastamonios }} rastamonios, 
+                                                 {{ personaje.ataques_comprados|length }}/50 ataques)
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-success w-100" 
+                                            id="btnComprar{{ ataque_personaje.id }}" disabled>
+                                        <i class="fas fa-shopping-cart"></i> Comprar Ataque
+                                    </button>
+                                </form>
+                                {% else %}
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <strong>No tienes personajes</strong><br>
+                                    Necesitas crear un personaje antes de poder comprar ataques.
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-tags fa-4x text-muted mb-3"></i>
+                <h3 class="text-muted">No hay ataques en venta</h3>
+                <p class="text-muted">Los usuarios pueden poner sus ataques en venta al 75% del precio de compra.</p>
+                <a href="{{ url_for('ataques') }}" class="btn btn-primary">
+                    <i class="fas fa-fist-raised"></i> Ver Ataques Disponibles
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% for ataque_personaje in ataques_en_venta %}
+    const selectPersonaje{{ ataque_personaje.id }} = document.getElementById('personaje_id_{{ ataque_personaje.id }}');
+    const btnComprar{{ ataque_personaje.id }} = document.getElementById('btnComprar{{ ataque_personaje.id }}');
+    const formComprar{{ ataque_personaje.id }} = document.getElementById('formComprar{{ ataque_personaje.id }}');
+    
+    if (selectPersonaje{{ ataque_personaje.id }}) {
+        selectPersonaje{{ ataque_personaje.id }}.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (this.value) {
+                const rastamonios = parseInt(selectedOption.dataset.rastamonios);
+                const ataques = parseInt(selectedOption.dataset.ataques);
+                const precio = {{ ataque_personaje.precio_venta }};
+                
+                // Verificar si puede comprar
+                const puedeComprar = rastamonios >= precio && ataques < 50;
+                btnComprar{{ ataque_personaje.id }}.disabled = !puedeComprar;
+                
+                if (!puedeComprar) {
+                    if (rastamonios < precio) {
+                        btnComprar{{ ataque_personaje.id }}.textContent = 'Rastamonios insuficientes';
+                    } else if (ataques >= 50) {
+                        btnComprar{{ ataque_personaje.id }}.textContent = 'Límite de ataques alcanzado';
+                    }
+                } else {
+                    btnComprar{{ ataque_personaje.id }}.innerHTML = '<i class="fas fa-shopping-cart"></i> Comprar Ataque';
+                }
+            } else {
+                btnComprar{{ ataque_personaje.id }}.disabled = true;
+            }
+        });
+        
+        formComprar{{ ataque_personaje.id }}.addEventListener('submit', function(e) {
+            const selectedOption = selectPersonaje{{ ataque_personaje.id }}.options[selectPersonaje{{ ataque_personaje.id }}.selectedIndex];
+            if (!selectPersonaje{{ ataque_personaje.id }}.value) {
+                e.preventDefault();
+                alert('Debes seleccionar un personaje');
+                return;
+            }
+            
+            const rastamonios = parseInt(selectedOption.dataset.rastamonios);
+            const ataques = parseInt(selectedOption.dataset.ataques);
+            const precio = {{ ataque_personaje.precio_venta }};
+            
+            if (rastamonios < precio) {
+                e.preventDefault();
+                alert('No tienes suficientes rastamonios para comprar este ataque');
+                return;
+            }
+            
+            if (ataques >= 50) {
+                e.preventDefault();
+                alert('Este personaje ya tiene el límite máximo de 50 ataques');
+                return;
+            }
+            
+            if (!confirm(`¿Estás seguro de que quieres comprar "{{ ataque_personaje.ataque.nombre }}" por ${precio} rastamonios?`)) {
+                e.preventDefault();
+            }
+        });
+    }
+    {% endfor %}
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,381 @@
+{% extends "base.html" %}
+
+{% block title %}Regalar Rastamonios{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4">Regalar Rastamonios</h1>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="row">
+        <!-- Regalar a Personaje Específico -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-gift me-2"></i>
+                        Regalar a Personaje Específico
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Campo de búsqueda para personajes -->
+                    <div class="mb-3">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <input type="text" class="form-control" id="buscarPersonaje" 
+                                   placeholder="Buscar personaje por nombre...">
+                            <button class="btn btn-outline-secondary" type="button" id="limpiarBusquedaPersonaje">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Personaje</th>
+                                    <th>Usuario</th>
+                                    <th>Rastamonios</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for personaje in personajes %}
+                                <tr class="fila-personaje" data-nombre="{{ personaje.nombre|lower }}">
+                                    <td>
+                                        <img src="{{ url_for('static', filename=personaje.foto) }}" 
+                                             alt="{{ personaje.nombre }}" 
+                                             class="rounded me-2" 
+                                             style="width: 30px; height: 30px; object-fit: cover;">
+                                        {{ personaje.nombre }}
+                                    </td>
+                                    <td>{{ personaje.creador.username if personaje.creador else 'N/A' }}</td>
+                                    <td>
+                                        <span class="badge bg-warning text-dark">
+                                            {{ personaje.rastamonios }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#modalPersonaje{{ personaje.id }}">
+                                            <i class="fas fa-gift me-1"></i>Regalar
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Regalar a Todos los Personajes de un Usuario -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2"></i>
+                        Regalar a Todos los Personajes de un Usuario
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Campo de búsqueda para usuarios -->
+                    <div class="mb-3">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <input type="text" class="form-control" id="buscarUsuario" 
+                                   placeholder="Buscar usuario por nombre...">
+                            <button class="btn btn-outline-secondary" type="button" id="limpiarBusquedaUsuario">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Personajes</th>
+                                    <th>Total Rastamonios</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for usuario_id, datos in usuarios.items() %}
+                                {% set usuario = datos.personajes[0].creador if datos.personajes else None %}
+                                {% if usuario %}
+                                <tr class="fila-usuario" data-nombre="{{ usuario.username|lower }}">
+                                    <td>
+                                        <strong>{{ usuario.username }}</strong>
+                                        {% if usuario.es_admin %}
+                                            <span class="badge bg-danger ms-1">Admin</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ datos.personajes|length }} personajes</td>
+                                    <td>
+                                        <span class="badge bg-warning text-dark">
+                                            {{ datos.total_rastamonios }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-success" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#modalUsuario{{ usuario_id }}">
+                                            <i class="fas fa-gift me-1"></i>Regalar a Todos
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Información
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Regalar a Personaje Específico:</h6>
+                            <ul>
+                                <li>Regala rastamonios solo a un personaje</li>
+                                <li>Útil para recompensas individuales</li>
+                                <li>Puedes especificar un motivo</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Regalar a Todos los Personajes de un Usuario:</h6>
+                            <ul>
+                                <li>Regala la misma cantidad a todos los personajes del usuario</li>
+                                <li>Útil para eventos o recompensas generales</li>
+                                <li>El total será: cantidad × número de personajes</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modales para regalar a personajes específicos -->
+{% for personaje in personajes %}
+<div class="modal fade" id="modalPersonaje{{ personaje.id }}" tabindex="-1" aria-labelledby="modalPersonajeLabel{{ personaje.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalPersonajeLabel{{ personaje.id }}">Regalar Rastamonios a {{ personaje.nombre }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('regalar_rastamonios_personaje', personaje_id=personaje.id) }}">
+                <div class="modal-body">
+                    <p><strong>Personaje:</strong> {{ personaje.nombre }}</p>
+                    <p><strong>Usuario:</strong> {{ personaje.creador.username if personaje.creador else 'N/A' }}</p>
+                    <p><strong>Rastamonios actuales:</strong> {{ personaje.rastamonios }}</p>
+                    
+                    <div class="mb-3">
+                        <label for="cantidad{{ personaje.id }}" class="form-label">Cantidad a regalar:</label>
+                        <input type="number" class="form-control" id="cantidad{{ personaje.id }}" 
+                               name="cantidad" min="1" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="motivo{{ personaje.id }}" class="form-label">Motivo (opcional):</label>
+                        <textarea class="form-control" id="motivo{{ personaje.id }}" 
+                                  name="motivo" rows="2" 
+                                  placeholder="Ej: Recompensa por evento, corrección de bug, etc."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-gift me-1"></i>Regalar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Modales para regalar a todos los personajes de un usuario -->
+{% for usuario_id, datos in usuarios.items() %}
+{% set usuario = datos.personajes[0].creador if datos.personajes else None %}
+{% if usuario %}
+<div class="modal fade" id="modalUsuario{{ usuario_id }}" tabindex="-1" aria-labelledby="modalUsuarioLabel{{ usuario_id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalUsuarioLabel{{ usuario_id }}">Regalar Rastamonios a Todos los Personajes de {{ usuario.username }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('regalar_rastamonios_todos_personajes', usuario_id=usuario_id) }}">
+                <div class="modal-body">
+                    <p><strong>Usuario:</strong> {{ usuario.username }}</p>
+                    <p><strong>Personajes:</strong> {{ datos.personajes|length }}</p>
+                    <p><strong>Total actual:</strong> {{ datos.total_rastamonios }} rastamonios</p>
+                    
+                    <div class="mb-3">
+                        <label for="cantidadUsuario{{ usuario_id }}" class="form-label">Cantidad a regalar por personaje:</label>
+                        <input type="number" class="form-control" id="cantidadUsuario{{ usuario_id }}" 
+                               name="cantidad" min="1" required>
+                        <div class="form-text">Se regalarán {{ datos.personajes|length }} × [cantidad] rastamonios total</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="motivoUsuario{{ usuario_id }}" class="form-label">Motivo (opcional):</label>
+                        <textarea class="form-control" id="motivoUsuario{{ usuario_id }}" 
+                                  name="motivo" rows="2" 
+                                  placeholder="Ej: Recompensa por evento, corrección de bug, etc."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-gift me-1"></i>Regalar a Todos
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Búsqueda de personajes
+    const buscarPersonaje = document.getElementById('buscarPersonaje');
+    const limpiarBusquedaPersonaje = document.getElementById('limpiarBusquedaPersonaje');
+    const filasPersonajes = document.querySelectorAll('.fila-personaje');
+    
+    // Búsqueda de usuarios
+    const buscarUsuario = document.getElementById('buscarUsuario');
+    const limpiarBusquedaUsuario = document.getElementById('limpiarBusquedaUsuario');
+    const filasUsuarios = document.querySelectorAll('.fila-usuario');
+    
+    // Función para filtrar filas
+    function filtrarFilas(termino, filas) {
+        const terminoLower = termino.toLowerCase();
+        let filasVisibles = 0;
+        
+        filas.forEach(fila => {
+            const nombre = fila.getAttribute('data-nombre');
+            if (nombre.includes(terminoLower)) {
+                fila.style.display = '';
+                filasVisibles++;
+            } else {
+                fila.style.display = 'none';
+            }
+        });
+        
+        return filasVisibles;
+    }
+    
+    // Event listeners para búsqueda de personajes
+    buscarPersonaje.addEventListener('input', function() {
+        const termino = this.value.trim();
+        const filasVisibles = filtrarFilas(termino, filasPersonajes);
+        
+        // Mostrar mensaje si no hay resultados
+        mostrarMensajeNoResultados('personajes', filasVisibles === 0 && termino !== '');
+    });
+    
+    limpiarBusquedaPersonaje.addEventListener('click', function() {
+        buscarPersonaje.value = '';
+        filasPersonajes.forEach(fila => fila.style.display = '');
+        ocultarMensajeNoResultados('personajes');
+    });
+    
+    // Event listeners para búsqueda de usuarios
+    buscarUsuario.addEventListener('input', function() {
+        const termino = this.value.trim();
+        const filasVisibles = filtrarFilas(termino, filasUsuarios);
+        
+        // Mostrar mensaje si no hay resultados
+        mostrarMensajeNoResultados('usuarios', filasVisibles === 0 && termino !== '');
+    });
+    
+    limpiarBusquedaUsuario.addEventListener('click', function() {
+        buscarUsuario.value = '';
+        filasUsuarios.forEach(fila => fila.style.display = '');
+        ocultarMensajeNoResultados('usuarios');
+    });
+    
+    // Funciones para mostrar/ocultar mensajes de no resultados
+    function mostrarMensajeNoResultados(tipo, mostrar) {
+        let mensajeId = tipo === 'personajes' ? 'mensajeNoPersonajes' : 'mensajeNoUsuarios';
+        let mensaje = document.getElementById(mensajeId);
+        
+        if (mostrar) {
+            if (!mensaje) {
+                mensaje = document.createElement('tr');
+                mensaje.id = mensajeId;
+                mensaje.innerHTML = `
+                    <td colspan="4" class="text-center text-muted py-3">
+                        <i class="fas fa-search me-2"></i>
+                        No se encontraron ${tipo === 'personajes' ? 'personajes' : 'usuarios'} que coincidan con la búsqueda
+                    </td>
+                `;
+                
+                const tbody = tipo === 'personajes' 
+                    ? document.querySelector('.fila-personaje').closest('tbody')
+                    : document.querySelector('.fila-usuario').closest('tbody');
+                tbody.appendChild(mensaje);
+            }
+            mensaje.style.display = '';
+        } else {
+            if (mensaje) {
+                mensaje.style.display = 'none';
+            }
+        }
+    }
+    
+    function ocultarMensajeNoResultados(tipo) {
+        const mensajeId = tipo === 'personajes' ? 'mensajeNoPersonajes' : 'mensajeNoUsuarios';
+        const mensaje = document.getElementById(mensajeId);
+        if (mensaje) {
+            mensaje.style.display = 'none';
+        }
+    }
+    
+    // Atajo de teclado: Ctrl+F para enfocar la búsqueda de personajes
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'f') {
+            e.preventDefault();
+            buscarPersonaje.focus();
+        }
+    });
+});
+</script>
+{% endblock %} 

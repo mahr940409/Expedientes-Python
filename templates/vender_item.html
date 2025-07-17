@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Vender Item - {{ compra.item.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-coins text-warning"></i>
+                        Vender Item: {{ compra.item.nombre }}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            {% if compra.item.imagen %}
+                                <img src="{{ url_for('static', filename=compra.item.imagen) }}" 
+                                     class="img-fluid rounded" 
+                                     alt="{{ compra.item.nombre }}">
+                            {% else %}
+                                <div class="bg-secondary text-white d-flex align-items-center justify-content-center" 
+                                     style="height: 200px;">
+                                    <i class="fas fa-image fa-3x"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <h5>{{ compra.item.nombre }}</h5>
+                            <p class="text-muted">{{ compra.item.descripcion }}</p>
+                            
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <strong>Precio original:</strong><br>
+                                    <span class="text-success">{{ compra.item.precio }} rastamonios</span>
+                                </div>
+                                <div class="col-6">
+                                    <strong>Cantidad:</strong><br>
+                                    <span class="text-info">{{ compra.cantidad }}</span>
+                                </div>
+                            </div>
+                            
+                            {% if compra.item.es_unico %}
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    <strong>Item Único:</strong> Al vender este item, volverá a estar disponible en la tienda con el precio que establezcas.
+                                </div>
+                            {% else %}
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <strong>Item Normal:</strong> Al vender este item, recibirás el 75% del valor original de compra.
+                                </div>
+                            {% endif %}
+                            
+                            <form method="POST">
+                                <div class="form-group">
+                                    <label for="precio_venta">
+                                        <strong>Precio de venta (rastamonios):</strong>
+                                    </label>
+                                    {% if compra.item.es_unico %}
+                                        <input type="number" 
+                                               class="form-control" 
+                                               id="precio_venta" 
+                                               name="precio_venta" 
+                                               min="0" 
+                                               value="{{ compra.item.precio }}"
+                                               required>
+                                        <small class="form-text text-muted">
+                                            Establece el precio al que quieres vender este item único.
+                                        </small>
+                                    {% else %}
+                                        {% set precio_venta_75 = (compra.item.precio * 0.75) | int %}
+                                        <input type="number" 
+                                               class="form-control" 
+                                               id="precio_venta" 
+                                               name="precio_venta" 
+                                               min="0" 
+                                               value="{{ precio_venta_75 }}"
+                                               readonly
+                                               style="background-color: #e9ecef;">
+                                        <small class="form-text text-muted">
+                                            <i class="fas fa-info-circle"></i> Precio fijo: 75% del valor original ({{ compra.item.precio }} × 0.75 = {{ precio_venta_75 }} rastamonios)
+                                        </small>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mt-4">
+                                    {% if compra.item.es_unico %}
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="fas fa-tag"></i>
+                                            Poner en Venta
+                                        </button>
+                                    {% else %}
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="fas fa-coins"></i>
+                                            Vender por {{ (compra.item.precio * 0.75) | int }} rastamonios
+                                        </button>
+                                    {% endif %}
+                                    <a href="{{ url_for('ver_personaje', personaje_id=personaje.id) }}" 
+                                       class="btn btn-secondary">
+                                        <i class="fas fa-arrow-left"></i>
+                                        Cancelar
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

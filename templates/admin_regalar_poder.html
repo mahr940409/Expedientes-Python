@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}Regalar Poder{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Inicio</a></li>
+                    <li class="breadcrumb-item active">Regalar Poder</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="mb-0">
+                    <i class="fas fa-magic text-warning"></i>
+                    Regalar Poder a Personajes
+                </h1>
+            </div>
+            
+            <div class="alert alert-info">
+                <h5><i class="fas fa-info-circle"></i> Información</h5>
+                <ul class="mb-0">
+                    <li>El poder regalado se suma al poder total del personaje de forma invisible</li>
+                    <li>Los usuarios no pueden ver cuánto poder ha sido regalado</li>
+                    <li>El poder regalado afecta los rankings y el nivel del personaje</li>
+                    <li>Esta acción no se puede deshacer fácilmente</li>
+                </ul>
+            </div>
+            
+            <!-- Barra de búsqueda -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" 
+                               class="form-control" 
+                               id="searchPersonaje" 
+                               placeholder="Buscar personaje por nombre...">
+                    </div>
+                </div>
+                <div class="col-md-6 text-end">
+                    <span class="badge bg-secondary" id="resultCount">
+                        Mostrando {{ personajes|length }} personajes
+                    </span>
+                </div>
+            </div>
+            
+            {% if personajes %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Imagen</th>
+                            <th>Nombre</th>
+                            <th>Usuario</th>
+                            <th>Poder Actual</th>
+                            <th>Nivel</th>
+                            <th>Rastamonios</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for personaje in personajes %}
+                        <tr>
+                            <td>{{ personaje.id }}</td>
+                            <td>
+                                {% if personaje.foto %}
+                                <img src="{{ url_for('static', filename=personaje.foto) }}" 
+                                     alt="{{ personaje.nombre }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
+                                {% else %}
+                                <i class="fas fa-user fa-2x text-muted"></i>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ personaje.nombre }}</strong>
+                                {% if personaje.dimension %}
+                                <br><small class="text-muted">{{ personaje.dimension }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if personaje.creador %}
+                                {{ personaje.creador.username }}
+                                {% else %}
+                                <span class="text-muted">Sin usuario</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-success fs-6">{{ personaje.poder_total }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ personaje.nivel }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-warning text-dark">{{ personaje.rastamonios }}</span>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-warning btn-sm" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#regalarPoderModal{{ personaje.id }}">
+                                    <i class="fas fa-magic"></i> Regalar Poder
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-users fa-4x text-muted mb-3"></i>
+                <h3 class="text-muted">No hay personajes creados</h3>
+                <p class="text-muted">Los usuarios deben crear personajes antes de poder regalarles poder.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modales para regalar poder -->
+{% for personaje in personajes %}
+<div class="modal fade" id="regalarPoderModal{{ personaje.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="fas fa-magic"></i>
+                    Regalar Poder a {{ personaje.nombre }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('regalar_poder_personaje', personaje_id=personaje.id) }}">
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Poder Actual:</strong>
+                            <span class="badge bg-success fs-6">{{ personaje.poder_total }}</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Nivel:</strong>
+                            <span class="badge bg-primary">{{ personaje.nivel }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="cantidad{{ personaje.id }}" class="form-label">
+                            <strong>Cantidad de poder a regalar:</strong>
+                        </label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="cantidad{{ personaje.id }}" 
+                               name="cantidad" 
+                               min="1" 
+                               max="1000000"
+                               placeholder="Ej: 1000"
+                               required>
+                        <div class="form-text">
+                            Ingresa la cantidad de poder que quieres regalar a este personaje.
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Advertencia:</strong> Esta acción no se puede deshacer fácilmente. 
+                        El poder regalado será invisible para el usuario pero afectará sus rankings.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-magic"></i> Regalar Poder
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Script para búsqueda en tiempo real -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchPersonaje');
+    const tableRows = document.querySelectorAll('tbody tr');
+    const resultCount = document.getElementById('resultCount');
+    const totalPersonajes = tableRows.length;
+    
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        let visibleCount = 0;
+        
+        tableRows.forEach(function(row) {
+            const nombre = row.querySelector('td:nth-child(3) strong').textContent.toLowerCase();
+            const usuario = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+            
+            if (nombre.includes(searchTerm) || usuario.includes(searchTerm)) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        // Actualizar contador
+        if (searchTerm === '') {
+            resultCount.textContent = `Mostrando ${totalPersonajes} personajes`;
+            resultCount.className = 'badge bg-secondary';
+        } else {
+            resultCount.textContent = `Encontrados ${visibleCount} de ${totalPersonajes} personajes`;
+            resultCount.className = visibleCount > 0 ? 'badge bg-success' : 'badge bg-danger';
+        }
+    });
+    
+    // Limpiar búsqueda con Escape
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            this.value = '';
+            this.dispatchEvent(new Event('input'));
+            this.blur();
+        }
+    });
+});
+</script>
+{% endblock %} 

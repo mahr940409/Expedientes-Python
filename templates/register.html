@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Registro de Usuario{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card">
+            <div class="card-header bg-success text-white text-center py-4">
+                <h3 class="mb-0">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Registro de Usuario
+                </h3>
+                <p class="mb-0 mt-2">Expedientes Digitales</p>
+            </div>
+            <div class="card-body p-4">
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                        
+                        <form method="POST">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">
+                                    <i class="fas fa-user me-1"></i>Nombre de Usuario *
+                                </label>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                                <div class="form-text">El nombre de usuario debe ser único</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="email" class="form-label">
+                                    <i class="fas fa-envelope me-1"></i>Email (opcional)
+                                </label>
+                                <input type="email" class="form-control" id="email" name="email">
+                                <div class="form-text">Puedes dejarlo vacío si prefieres</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="password" class="form-label">
+                                    <i class="fas fa-lock me-1"></i>Contraseña *
+                                </label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                                <div class="form-text">Mínimo 6 caracteres</div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="confirm_password" class="form-label">
+                                    <i class="fas fa-lock me-1"></i>Confirmar Contraseña *
+                                </label>
+                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Información sobre personajes:</strong><br>
+                                • <strong>Normal:</strong> 3 personajes (nivel básico)<br>
+                                • <strong>Premium:</strong> 5 personajes (nivel intermedio)<br>
+                                • <strong>VIP:</strong> 8 personajes (nivel avanzado)<br>
+                                • <strong>Legendario:</strong> 12 personajes (nivel máximo)<br>
+                                • Puedes comprar slots adicionales con rastamonios<br>
+                                • Los administradores pueden cambiar tu nivel si lo solicitas
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-user-plus me-2"></i>Registrarse
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="text-center">
+                            <p class="mb-2">¿Ya tienes cuenta?</p>
+                            <a href="{{ url_for('login') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-sign-in-alt me-1"></i>Iniciar Sesión
+                            </a>
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for('index') }}" class="text-muted">
+                                <i class="fas fa-arrow-left me-1"></i>Volver al inicio
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Ataques - {{ personaje.nombre }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Inicio</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('ver_personaje', personaje_id=personaje.id) }}">{{ personaje.nombre }}</a></li>
+                <li class="breadcrumb-item active">Ataques</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2><i class="fas fa-fist-raised me-2"></i>Ataques Disponibles</h2>
+        <p class="text-muted">Comprando ataques para {{ personaje.nombre }}</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="alert alert-success mb-0">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <i class="fas fa-coins me-2"></i>
+                    <strong>{{ personaje.rastamonios }}</strong> rastamonios
+                </div>
+                <a href="{{ url_for('ver_personaje', personaje_id=personaje.id) }}" class="btn btn-outline-success btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Volver
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if ataques %}
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for ataque in ataques %}
+    <div class="col">
+        <div class="card h-100 shadow-sm">
+            {% if ataque.imagen %}
+                <img src="{{ url_for('static', filename=ataque.imagen) }}" class="card-img-top" alt="{{ ataque.nombre }}" style="height: 200px; object-fit: cover;">
+            {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="fas fa-fist-raised fa-3x text-muted"></i>
+                </div>
+            {% endif %}
+            
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ ataque.nombre }}</h5>
+                <p class="card-text flex-grow-1">{{ ataque.descripcion }}</p>
+                
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="badge bg-primary fs-6">
+                        <i class="fas fa-coins me-1"></i>{{ ataque.precio }} rastamonios
+                    </span>
+                    <span class="badge bg-danger">
+                        <i class="fas fa-bolt me-1"></i>{{ ataque.poder }} Poder
+                    </span>
+                </div>
+                
+                <div class="mb-3">
+                    {% if ataque.es_unico %}
+                        <span class="badge bg-warning text-dark">
+                            <i class="fas fa-star me-1"></i>Único
+                        </span>
+                    {% else %}
+                        <span class="badge bg-info">
+                            <i class="fas fa-infinity me-1"></i>Ilimitado
+                        </span>
+                    {% endif %}
+                    
+                    {% if ataque.elemento %}
+                        <span class="badge elemento-badge elemento-{{ ataque.elemento|lower }} ms-1">
+                            {{ ataque.elemento }}
+                        </span>
+                    {% endif %}
+                </div>
+                
+                <form action="{{ url_for('comprar_ataque') }}" method="POST">
+                    <input type="hidden" name="ataque_id" value="{{ ataque.id }}">
+                    <input type="hidden" name="personaje_id" value="{{ personaje.id }}">
+                    <button type="submit" class="btn btn-success w-100" 
+                            {% if personaje.rastamonios < ataque.precio %}disabled{% endif %}
+                            onclick="return confirm('¿Comprar {{ ataque.nombre }} por {{ ataque.precio }} rastamonios?')">
+                        <i class="fas fa-shopping-cart me-2"></i>
+                        {% if personaje.rastamonios >= ataque.precio %}
+                            Comprar Ataque
+                        {% else %}
+                            Rastamonios insuficientes
+                        {% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-fist-raised fa-4x text-muted mb-4"></i>
+    <h3 class="text-muted">No hay ataques disponibles</h3>
+    <p class="text-muted">Todos los ataques han sido comprados o no están disponibles</p>
+    <a href="{{ url_for('ver_personaje', personaje_id=personaje.id) }}" class="btn btn-primary">
+        <i class="fas fa-arrow-left me-2"></i>Volver al personaje
+    </a>
+</div>
+{% endif %}
+{% endblock %} 

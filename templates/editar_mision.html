@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Misión - Expediente Digital{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container text-center">
+        <h1 class="display-4 mb-3">
+            <i class="fas fa-edit me-3"></i>
+            Editar Misión
+        </h1>
+        <p class="lead mb-4">Modifica los detalles de la misión</p>
+        <a href="{{ url_for('admin_misiones') }}" class="btn btn-outline-light btn-lg">
+            <i class="fas fa-arrow-left me-2"></i>Volver a Misiones
+        </a>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        Editar Misión: {{ mision.titulo }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="titulo" class="form-label">
+                                <i class="fas fa-heading me-1"></i>Título de la Misión
+                            </label>
+                            <input type="text" class="form-control" id="titulo" name="titulo" 
+                                   value="{{ mision.titulo }}" required>
+                            <div class="form-text">Un título descriptivo y atractivo para la misión</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label">
+                                <i class="fas fa-align-left me-1"></i>Descripción
+                            </label>
+                            <textarea class="form-control" id="descripcion" name="descripcion" rows="4" required>{{ mision.descripcion }}</textarea>
+                            <div class="form-text">Explica qué debe hacer el personaje para completar la misión</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="imagen" class="form-label">
+                                <i class="fas fa-image me-1"></i>Imagen de la Misión (Opcional)
+                            </label>
+                            {% if mision.imagen %}
+                                <div class="mb-2">
+                                    <img src="{{ url_for('static', filename=mision.imagen) }}" alt="Imagen actual" 
+                                         class="img-thumbnail" style="max-height: 150px; object-fit: contain; background-color: #f8f9fa;">
+                                    <div class="form-text">Imagen actual de la misión</div>
+                                </div>
+                            {% endif %}
+                            <input type="file" class="form-control" id="imagen" name="imagen" 
+                                   accept="image/png,image/jpg,image/jpeg,image/gif,image/webp">
+                            <div class="form-text">Sube una nueva imagen para reemplazar la actual. Formatos: PNG, JPG, JPEG, GIF, WEBP</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="poder_minimo" class="form-label">
+                                        <i class="fas fa-shield-alt me-1"></i>Poder Mínimo Requerido
+                                    </label>
+                                    <input type="number" class="form-control" id="poder_minimo" name="poder_minimo" 
+                                           min="1" value="{{ mision.poder_minimo }}" required>
+                                    <div class="form-text">Poder mínimo que debe tener el personaje para aceptar la misión</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="duracion_segundos" class="form-label">
+                                        <i class="fas fa-clock me-1"></i>Duración (segundos)
+                                    </label>
+                                    <input type="number" class="form-control" id="duracion_segundos" name="duracion_segundos" 
+                                           min="1" max="86400" value="{{ mision.duracion_segundos }}" required>
+                                    <div class="form-text">Tiempo límite para completar la misión (máximo 24 horas = 86,400 segundos)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="recompensa_rastamonios" class="form-label">
+                                        <i class="fas fa-coins me-1"></i>Recompensa en Rastamonios
+                                    </label>
+                                    <input type="number" class="form-control" id="recompensa_rastamonios" name="recompensa_rastamonios" 
+                                           min="1" value="{{ mision.recompensa_rastamonios }}" required>
+                                    <div class="form-text">Cantidad de rastamonios que ganará el personaje</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="recompensa_poder" class="form-label">
+                                        <i class="fas fa-fire me-1"></i>Recompensa de Poder
+                                    </label>
+                                    <input type="number" class="form-control" id="recompensa_poder" name="recompensa_poder" 
+                                           min="0" value="{{ mision.recompensa_poder }}" required>
+                                    <div class="form-text">Poder adicional que ganará el personaje (opcional)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-exclamation-triangle me-1"></i>Información de la misión:</h6>
+                            <ul class="mb-0">
+                                <li><strong>Estado actual:</strong> 
+                                    {% if mision.activa %}
+                                        <span class="badge bg-success">Activa</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactiva</span>
+                                    {% endif %}
+                                </li>
+                                <li><strong>Creada:</strong> {{ mision.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</li>
+                                <li><strong>Nota:</strong> Los cambios no afectarán misiones ya en progreso</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('admin_misiones') }}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-times me-1"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

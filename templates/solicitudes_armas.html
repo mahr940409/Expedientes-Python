@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Solicitudes de Armas{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Solicitudes de Armas</h2>
+                <a href="{{ url_for('nueva_solicitud_arma') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nueva Solicitud de Arma
+                </a>
+            </div>
+
+            {% if solicitudes %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Personaje</th>
+                                <th>Arma</th>
+                                <th>Poder</th>
+                                <th>Estado</th>
+                                <th>Fecha</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for solicitud in solicitudes %}
+                            <tr>
+                                <td>{{ solicitud.personaje.nombre }}</td>
+                                <td>
+                                    <strong>{{ solicitud.nombre }}</strong><br>
+                                    <small class="text-muted">{{ solicitud.descripcion[:50] }}...</small>
+                                </td>
+                                <td><span class="badge bg-success">{{ solicitud.poder }} Poder</span></td>
+                                <td>
+                                    {% if solicitud.estado == 'pendiente' %}
+                                        <span class="badge bg-warning">Pendiente</span>
+                                    {% elif solicitud.estado == 'aprobada' %}
+                                        <span class="badge bg-success">Aprobada</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Rechazada</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ solicitud.fecha_solicitud.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#modalSolicitud{{ solicitud.id }}">
+                                        <i class="fas fa-eye"></i> Ver
+                                    </button>
+                                    {% if solicitud.estado == 'pendiente' and session.get('es_admin') %}
+                                        <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalAprobar{{ solicitud.id }}">
+                                            <i class="fas fa-check"></i> Aprobar
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#modalRechazar{{ solicitud.id }}">
+                                            <i class="fas fa-times"></i> Rechazar
+                                        </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Modales para ver detalles -->
+                {% for solicitud in solicitudes %}
+                <div class="modal fade" id="modalSolicitud{{ solicitud.id }}" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Detalles de Solicitud - {{ solicitud.nombre }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <img src="{{ url_for('static', filename='uploads/' + solicitud.imagen) }}" 
+                                             class="img-fluid rounded" alt="{{ solicitud.nombre }}">
+                                    </div>
+                                    <div class="col-md-8">
+                                        <h6>Información de la Arma</h6>
+                                        <p><strong>Nombre:</strong> {{ solicitud.nombre }}</p>
+                                        <p><strong>Descripción:</strong> {{ solicitud.descripcion }}</p>
+                                        <p><strong>Poder:</strong> {{ solicitud.poder }} Poder</p>
+                                        
+                                        <h6 class="mt-3">Información de la Solicitud</h6>
+                                        <p><strong>Personaje:</strong> {{ solicitud.personaje.nombre }}</p>
+                                        <p><strong>Solicitante:</strong> {{ solicitud.usuario.username }}</p>
+                                        <p><strong>Motivo:</strong> {{ solicitud.motivo or 'No especificado' }}</p>
+                                        <p><strong>Estado:</strong> 
+                                            {% if solicitud.estado == 'pendiente' %}
+                                                <span class="badge bg-warning">Pendiente</span>
+                                            {% elif solicitud.estado == 'aprobada' %}
+                                                <span class="badge bg-success">Aprobada</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Rechazada</span>
+                                            {% endif %}
+                                        </p>
+                                        <p><strong>Fecha:</strong> {{ solicitud.fecha_solicitud.strftime('%d/%m/%Y %H:%M') }}</p>
+                                        
+                                        {% if solicitud.respuesta_admin %}
+                                            <h6 class="mt-3">Respuesta del Administrador</h6>
+                                            <p>{{ solicitud.respuesta_admin }}</p>
+                                            <p><small class="text-muted">{{ solicitud.fecha_respuesta.strftime('%d/%m/%Y %H:%M') }}</small></p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- Modales para aprobar/rechazar (solo admin) -->
+                {% if session.get('es_admin') %}
+                    {% for solicitud in solicitudes %}
+                        {% if solicitud.estado == 'pendiente' %}
+                        <!-- Modal Aprobar -->
+                        <div class="modal fade" id="modalAprobar{{ solicitud.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Aprobar Solicitud</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form action="{{ url_for('aprobar_solicitud_arma', solicitud_id=solicitud.id) }}" method="POST">
+                                        <div class="modal-body">
+                                            <p>¿Estás seguro de que quieres aprobar la solicitud de arma <strong>{{ solicitud.nombre }}</strong>?</p>
+                                            <div class="mb-3">
+                                                <label for="poder" class="form-label">Poder a asignar</label>
+                                                <input type="number" class="form-control" name="poder" min="1" max="3000" value="{{ solicitud.poder }}" required>
+                                                <div class="form-text">Puedes ajustar el poder final de esta arma (1-3000).</div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="respuesta" class="form-label">Respuesta (opcional):</label>
+                                                <textarea class="form-control" name="respuesta" rows="3" placeholder="Mensaje para el usuario..."></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                            <button type="submit" class="btn btn-success">Aprobar</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modal Rechazar -->
+                        <div class="modal fade" id="modalRechazar{{ solicitud.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Rechazar Solicitud</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form action="{{ url_for('rechazar_solicitud_arma', solicitud_id=solicitud.id) }}" method="POST">
+                                        <div class="modal-body">
+                                            <p>¿Estás seguro de que quieres rechazar la solicitud de arma <strong>{{ solicitud.nombre }}</strong>?</p>
+                                            <div class="mb-3">
+                                                <label for="respuesta" class="form-label">Motivo del rechazo:</label>
+                                                <textarea class="form-control" name="respuesta" rows="3" placeholder="Explica por qué rechazas la solicitud..." required></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                            <button type="submit" class="btn btn-danger">Rechazar</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> No hay solicitudes de armas para mostrar.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

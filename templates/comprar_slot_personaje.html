@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Comprar Slot de Personaje{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        Comprar Slot de Personaje
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Información Actual</h5>
+                            <div class="card bg-light info-actual-card">
+                                <div class="card-body">
+                                    <p><strong>Usuario:</strong> {{ user.username }}</p>
+                                    <p><strong>Nivel:</strong> 
+                                        <span class="badge bg-{{ 'primary' if user.nivel_usuario == 'normal' else 'success' if user.nivel_usuario == 'premium' else 'warning' if user.nivel_usuario == 'vip' else 'danger' }}">
+                                            {{ user.nivel_usuario.title() }}
+                                        </span>
+                                    </p>
+                                    <p><strong>Personajes creados:</strong> {{ user.personajes_creados|length }}</p>
+                                    <p><strong>Slots comprados:</strong> {{ user.slots_comprados }}</p>
+                                    <p><strong>Límite actual:</strong> {{ user.obtener_limite_personajes() }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h5>Próximo Slot</h5>
+                            <div class="card bg-warning text-dark">
+                                <div class="card-body text-center">
+                                    <h4 class="mb-3">
+                                        <i class="fas fa-coins me-2"></i>
+                                        {{ precio }} Rastamonios
+                                    </h4>
+                                    <p class="mb-3">Precio del siguiente slot de personaje</p>
+                                    
+                                    {% if personajes %}
+                                        <p><strong>Total disponible:</strong> {{ total_rastamonios }} rastamonios</p>
+                                        
+                                        {% if total_rastamonios >= precio %}
+                                            <div class="alert alert-success">
+                                                <i class="fas fa-check-circle me-2"></i>
+                                                ¡Tienes suficientes rastamonios!
+                                            </div>
+                                        {% else %}
+                                            <div class="alert alert-danger">
+                                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                                No tienes suficientes rastamonios
+                                            </div>
+                                        {% endif %}
+                                    {% else %}
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            Necesitas al menos un personaje para comprar slots
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <h5>Rastamonios por Personaje</h5>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Personaje</th>
+                                            <th>Rastamonios</th>
+                                            <th>Porcentaje del Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for personaje in personajes %}
+                                        <tr>
+                                            <td>
+                                                <img src="{{ url_for('static', filename=personaje.foto) }}" 
+                                                     alt="{{ personaje.nombre }}" 
+                                                     class="rounded me-2" 
+                                                     style="width: 30px; height: 30px; object-fit: cover;">
+                                                {{ personaje.nombre }}
+                                            </td>
+                                            <td>{{ personaje.rastamonios }} rastamonios</td>
+                                            <td>
+                                                {% if total_rastamonios > 0 %}
+                                                    {{ "%.1f"|format((personaje.rastamonios / total_rastamonios) * 100) }}%
+                                                {% else %}
+                                                    0%
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                        <tr class="table-info">
+                                            <td><strong>TOTAL</strong></td>
+                                            <td><strong>{{ total_rastamonios }} rastamonios</strong></td>
+                                            <td><strong>100%</strong></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5>Información de Precios</h5>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Slot #</th>
+                                            <th>Precio</th>
+                                            <th>Total de Personajes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for i in range(1, 11) %}
+                                        <tr class="{{ 'table-warning' if i == user.slots_comprados + 1 else '' }}">
+                                            <td>{{ i }}</td>
+                                            <td>{{ 50000 + (i - 1) * 10000 }} rastamonios</td>
+                                            <td>{{ user.obtener_limite_personajes() + i - user.slots_comprados }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12 text-center">
+                            {% if personajes and total_rastamonios >= precio %}
+                                <form method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-success btn-lg">
+                                        <i class="fas fa-shopping-cart me-2"></i>
+                                        Comprar Slot por {{ precio }} Rastamonios
+                                    </button>
+                                </form>
+                            {% else %}
+                                <button class="btn btn-secondary btn-lg" disabled>
+                                    <i class="fas fa-lock me-2"></i>
+                                    No tienes suficientes rastamonios
+                                </button>
+                            {% endif %}
+                            
+                            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-lg ms-2">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Volver al Inicio
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
+
+{% block extra_css %}
+<style>
+[data-theme="dark"] .info-actual-card {
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important;
+    border: 1px solid var(--border-color) !important;
+}
+[data-theme="dark"] .info-actual-card p,
+[data-theme="dark"] .info-actual-card strong {
+    color: var(--text-color) !important;
+}
+</style>
+{% endblock %} 

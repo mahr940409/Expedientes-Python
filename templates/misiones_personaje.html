@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Misiones - {{ personaje.nombre }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Inicio</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('ver_personaje', personaje_id=personaje.id) }}">{{ personaje.nombre }}</a></li>
+                <li class="breadcrumb-item active">Misiones</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2><i class="fas fa-tasks me-2"></i>Misiones Disponibles</h2>
+        <p class="text-muted">Completando misiones con {{ personaje.nombre }}</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="alert alert-success mb-0">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <i class="fas fa-coins me-2"></i>
+                    <strong>{{ personaje.rastamonios }}</strong> rastamonios
+                </div>
+                <a href="{{ url_for('ver_personaje', personaje_id=personaje.id) }}" class="btn btn-outline-success btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Volver
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Misión en Progreso -->
+{% if mision_en_progreso %}
+<div class="alert alert-warning mb-4">
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <h5 class="mb-1">
+                <i class="fas fa-clock me-2"></i>Misión en Progreso
+            </h5>
+            <p class="mb-0">
+                <strong>{{ mision_en_progreso.mision.nombre }}</strong> - 
+                Completada el {{ mision_en_progreso.fecha_completado.strftime('%d/%m/%Y %H:%M') if mision_en_progreso.fecha_completado else 'En progreso' }}
+            </p>
+        </div>
+        {% if mision_en_progreso.fecha_completado %}
+        <form action="{{ url_for('reclamar_recompensa_mision', mision_personaje_id=mision_en_progreso.id) }}" method="POST">
+            <input type="hidden" name="personaje_id" value="{{ personaje.id }}">
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-gift me-2"></i>Reclamar Recompensa
+            </button>
+        </form>
+        {% else %}
+        <span class="badge bg-warning text-dark">
+            <i class="fas fa-hourglass-half me-1"></i>En Progreso
+        </span>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Misiones Disponibles -->
+{% if misiones %}
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for mision in misiones %}
+    <div class="col">
+        <div class="card h-100 shadow-sm">
+            {% if mision.imagen %}
+                <img src="{{ url_for('static', filename=mision.imagen) }}" class="card-img-top" alt="{{ mision.nombre }}" style="height: 200px; object-fit: cover;">
+            {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="fas fa-tasks fa-3x text-muted"></i>
+                </div>
+            {% endif %}
+            
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ mision.nombre }}</h5>
+                <p class="card-text flex-grow-1">{{ mision.descripcion }}</p>
+                
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="badge bg-success fs-6">
+                        <i class="fas fa-coins me-1"></i>{{ mision.recompensa_rastamonios }} rastamonios
+                    </span>
+                    <span class="badge bg-danger">
+                        <i class="fas fa-bolt me-1"></i>{{ mision.poder_minimo }} Poder Mínimo
+                    </span>
+                </div>
+                
+                <div class="mb-3">
+                    {% if personaje.poder_total >= mision.poder_minimo %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-check me-1"></i>Poder Suficiente
+                        </span>
+                    {% else %}
+                        <span class="badge bg-danger">
+                            <i class="fas fa-times me-1"></i>Poder Insuficiente
+                        </span>
+                    {% endif %}
+                </div>
+                
+                <form action="{{ url_for('aceptar_mision') }}" method="POST">
+                    <input type="hidden" name="mision_id" value="{{ mision.id }}">
+                    <input type="hidden" name="personaje_id" value="{{ personaje.id }}">
+                    <button type="submit" class="btn btn-primary w-100" 
+                            {% if personaje.poder_total < mision.poder_minimo or mision_en_progreso %}disabled{% endif %}
+                            onclick="return confirm('¿Aceptar la misión {{ mision.nombre }}?')">
+                        <i class="fas fa-play me-2"></i>
+                        {% if personaje.poder_total >= mision.poder_minimo and not mision_en_progreso %}
+                            Aceptar Misión
+                        {% elif mision_en_progreso %}
+                            Misión en Progreso
+                        {% else %}
+                            Poder Insuficiente
+                        {% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-tasks fa-4x text-muted mb-4"></i>
+    <h3 class="text-muted">No hay misiones disponibles</h3>
+    <p class="text-muted">Todas las misiones han sido completadas o no están disponibles</p>
+    <a href="{{ url_for('ver_personaje', personaje_id=personaje.id) }}" class="btn btn-primary">
+        <i class="fas fa-arrow-left me-2"></i>Volver al personaje
+    </a>
+</div>
+{% endif %}
+{% endblock %} 

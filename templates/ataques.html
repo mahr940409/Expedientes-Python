@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Ataques Disponibles{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="mb-0">
+                    <i class="fas fa-fist-raised text-danger"></i>
+                    Ataques Disponibles
+                </h1>
+                <div>
+                    <a href="{{ url_for('ataques_en_venta') }}" class="btn btn-outline-warning me-2">
+                        <i class="fas fa-tags"></i> Ataques en Venta
+                    </a>
+                    {% if session.get('user_id') and user.es_admin %}
+                    <a href="{{ url_for('admin_ataques') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-cog"></i> Administrar
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if ataques %}
+            <div class="row">
+                {% for ataque in ataques %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 shadow-sm border-0">
+                        {% if ataque.imagen %}
+                        <img src="{{ url_for('static', filename=ataque.imagen) }}" 
+                             class="card-img-top" alt="{{ ataque.nombre }}"
+                             style="height: 200px; object-fit: cover;">
+                        {% else %}
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                             style="height: 200px;">
+                            <i class="fas fa-fist-raised fa-3x text-muted"></i>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title text-primary">
+                                {{ ataque.nombre }}
+                                {% if ataque.es_unico %}
+                                <span class="badge bg-danger ms-2">
+                                    <i class="fas fa-star me-1"></i>Único
+                                </span>
+                                {% endif %}
+                            </h5>
+                            <p class="card-text text-muted">{{ ataque.descripcion }}</p>
+                            
+                            <div class="mt-auto">
+                                <div class="row text-center mb-3">
+                                    <div class="col-4">
+                                        <div class="bg-success text-white rounded p-2">
+                                            <i class="fas fa-bolt"></i>
+                                            <div class="fw-bold">{{ ataque.poder }}</div>
+                                            <small>Poder</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="bg-warning text-dark rounded p-2">
+                                            <i class="fas fa-coins"></i>
+                                            <div class="fw-bold">{{ ataque.precio }}</div>
+                                            <small>Precio</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        {% if ataque.es_unico %}
+                                            <div class="bg-danger text-white rounded p-2">
+                                                <i class="fas fa-star"></i>
+                                                <div class="fw-bold">1</div>
+                                                <small>Único</small>
+                                            </div>
+                                        {% elif ataque.stock == -1 %}
+                                            <div class="bg-info text-white rounded p-2">
+                                                <i class="fas fa-infinity"></i>
+                                                <div class="fw-bold">∞</div>
+                                                <small>Stock</small>
+                                            </div>
+                                        {% elif ataque.stock > 0 %}
+                                            <div class="bg-success text-white rounded p-2">
+                                                <i class="fas fa-boxes"></i>
+                                                <div class="fw-bold">{{ ataque.stock }}</div>
+                                                <small>Stock</small>
+                                            </div>
+                                        {% else %}
+                                            <div class="bg-danger text-white rounded p-2">
+                                                <i class="fas fa-times"></i>
+                                                <div class="fw-bold">0</div>
+                                                <small>Agotado</small>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <a href="{{ url_for('ver_ataque', ataque_id=ataque.id) }}" 
+                                   class="btn btn-primary w-100">
+                                    <i class="fas fa-eye"></i> Ver Detalles
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-fist-raised fa-4x text-muted mb-3"></i>
+                <h3 class="text-muted">No hay ataques disponibles</h3>
+                <p class="text-muted">Los administradores pueden agregar nuevos ataques.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

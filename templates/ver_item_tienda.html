@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Detalle del Ítem - {{ item.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                {% if item.imagen %}
+                <img src="{{ url_for('static', filename=item.imagen) }}" class="card-img-top" alt="{{ item.nombre }}" style="height: 250px; object-fit: contain; background-color: #f8f9fa;">
+                {% endif %}
+                <div class="card-body">
+                    <h3 class="card-title">{{ item.nombre }}</h3>
+                    <p class="card-text">{{ item.descripcion }}</p>
+                    <div class="mb-2">
+                        {% if item.es_unico %}
+                            {% if compra_en_venta %}
+                                <span class="badge bg-warning text-dark me-2">
+                                    <i class="fas fa-tag"></i> {{ compra_en_venta.precio_venta }} rastamonios (precio de venta)
+                                </span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark me-2">
+                                    <i class="fas fa-coins"></i> {{ item.precio }} rastamonios
+                                </span>
+                            {% endif %}
+                            <span class="badge bg-danger">
+                                <i class="fas fa-star"></i> Único
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark me-2">
+                                <i class="fas fa-coins"></i> {{ item.precio }} rastamonios
+                            </span>
+                        {% endif %}
+                        {% if item.poder_adicional > 0 %}
+                        <span class="badge bg-info">
+                            <i class="fas fa-fist-raised"></i> +{{ item.poder_adicional }} poder
+                        </span>
+                        {% endif %}
+                    </div>
+                    <hr>
+                    {% if item.es_unico %}
+                        {# Usar la compra_en_venta pasada desde el controlador #}
+                        {% set ya_comprado = false %}
+                        {% for p in personajes %}
+                            {% for c in p.compras %}
+                                {% if c.item_id == item.id %}
+                                    {% set ya_comprado = true %}
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                        {% if compra_en_venta %}
+                            <form method="POST" action="{{ url_for('comprar_unico_en_venta', compra_id=compra_en_venta.id, personaje_id=0) }}">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-tag"></i> Este ítem está en venta por <b>{{ compra_en_venta.precio_venta }} rastamonios</b>.
+                                </div>
+                                <div class="mb-3">
+                                    <label for="personaje_id" class="form-label">Selecciona un personaje para comprar:</label>
+                                    <select class="form-select" name="personaje_id" id="personaje_id" required>
+                                        <option value="">Selecciona un personaje</option>
+                                        {% for personaje in personajes %}
+                                            <option value="{{ personaje.id }}" {% if personaje.id == compra_en_venta.vendedor_id %}disabled{% endif %}>
+                                                {{ personaje.nombre }} ({{ personaje.rastamonios }} rastamonios)
+                                                {% if personaje.id == compra_en_venta.vendedor_id %} - Eres el vendedor{% endif %}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-success" {% if not personajes or personajes|length == 0 %}disabled{% endif %}>
+                                    <i class="fas fa-shopping-cart"></i> Comprar
+                                </button>
+                                <a href="{{ url_for('tienda') }}" class="btn btn-secondary ms-2">
+                                    <i class="fas fa-arrow-left"></i> Volver a la tienda
+                                </a>
+                            </form>
+                        {% elif not ya_comprado %}
+                            <form method="POST">
+                                <div class="mb-3">
+                                    <label for="personaje_id" class="form-label">Selecciona un personaje para comprar:</label>
+                                    <select class="form-select" name="personaje_id" id="personaje_id" required>
+                                        <option value="">Selecciona un personaje</option>
+                                        {% for personaje in personajes %}
+                                            <option value="{{ personaje.id }}">
+                                                {{ personaje.nombre }} ({{ personaje.rastamonios }} rastamonios)
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                {% if mensaje %}
+                                <div class="alert alert-danger">{{ mensaje }}</div>
+                                {% endif %}
+                                <button type="submit" class="btn btn-success" {% if not personajes or personajes|length == 0 %}disabled{% endif %}>
+                                    <i class="fas fa-shopping-cart"></i> Comprar
+                                </button>
+                                <a href="{{ url_for('tienda') }}" class="btn btn-secondary ms-2">
+                                    <i class="fas fa-arrow-left"></i> Volver a la tienda
+                                </a>
+                            </form>
+                        {% endif %}
+                    {% else %}
+                        <form method="POST">
+                            <div class="mb-3">
+                                <label for="personaje_id" class="form-label">Selecciona un personaje para comprar:</label>
+                                <select class="form-select" name="personaje_id" id="personaje_id" required>
+                                    <option value="">Selecciona un personaje</option>
+                                    {% for personaje in personajes %}
+                                        <option value="{{ personaje.id }}" {% if personaje.id in comprado_por %}disabled{% endif %}>
+                                            {{ personaje.nombre }} ({{ personaje.rastamonios }} rastamonios)
+                                            {% if personaje.id in comprado_por %} - Ya comprado{% endif %}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% if mensaje %}
+                            <div class="alert alert-danger">{{ mensaje }}</div>
+                            {% endif %}
+                            <button type="submit" class="btn btn-success" {% if not personajes or personajes|length == 0 %}disabled{% endif %}>
+                                <i class="fas fa-shopping-cart"></i> Comprar
+                            </button>
+                            <a href="{{ url_for('tienda') }}" class="btn btn-secondary ms-2">
+                                <i class="fas fa-arrow-left"></i> Volver a la tienda
+                            </a>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

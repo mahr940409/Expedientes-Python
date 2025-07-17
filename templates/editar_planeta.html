@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Editar {{ planeta.nombre }} - Expediente Digital{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h3 class="mb-0">
+                    <i class="fas fa-edit me-2"></i>
+                    Editar Planeta: {{ planeta.nombre }}
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nombre" class="form-label">
+                                    <i class="fas fa-planet-ringed me-1"></i>Nombre del Planeta *
+                                </label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" value="{{ planeta.nombre }}" required>
+                                <div class="form-text">Nombre único del planeta en el universo</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="dimension" class="form-label">
+                                    <i class="fas fa-globe me-1"></i>Dimensión *
+                                </label>
+                                <select class="form-select" id="dimension" name="dimension" required>
+                                    <option value="">Selecciona una dimensión</option>
+                                    <option value="Universo" {% if planeta.dimension == 'Universo' %}selected{% endif %}>Universo</option>
+                                    <option value="Cielo" {% if planeta.dimension == 'Cielo' %}selected{% endif %}>Cielo</option>
+                                    <option value="Infierno" {% if planeta.dimension == 'Infierno' %}selected{% endif %}>Infierno</option>
+                                    <option value="Limbo" {% if planeta.dimension == 'Limbo' %}selected{% endif %}>Limbo</option>
+                                </select>
+                                <div class="form-text">Dimensión donde se encuentra el planeta</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- NUEVO: Selector de visibilidad y dueño -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="es_publico" class="form-label">
+                                    <i class="fas fa-eye me-1"></i>Visibilidad
+                                </label>
+                                <select class="form-select" id="es_publico" name="es_publico" required>
+                                    <option value="1" {% if planeta.es_publico %}selected{% endif %}>Público</option>
+                                    <option value="0" {% if not planeta.es_publico %}selected{% endif %}>Restringido</option>
+                                </select>
+                                <div class="form-text">¿Quién puede ver y solicitar unirse a este planeta?</div>
+                            </div>
+                        </div>
+                        {% if puede_cambiar_duenio %}
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="duenio_id" class="form-label">
+                                    <i class="fas fa-user-shield me-1"></i>Dueño del planeta
+                                </label>
+                                <select class="form-select" id="duenio_id" name="duenio_id" required>
+                                    {% for usuario in usuarios %}
+                                        <option value="{{ usuario.id }}" {% if usuario.id == planeta.duenio_id %}selected{% endif %}>{{ usuario.username }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">El dueño puede gestionar solicitudes y editar el planeta</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="descripcion" class="form-label">
+                            <i class="fas fa-align-left me-1"></i>Descripción
+                        </label>
+                        <textarea class="form-control" id="descripcion" name="descripcion" rows="4" placeholder="Describe las características del planeta, su clima, habitantes, etc.">{{ planeta.descripcion or '' }}</textarea>
+                        <div class="form-text">Información adicional sobre el planeta (opcional)</div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('listar_planetas') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-save me-1"></i>Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Información del planeta -->
+        <div class="card mt-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Información del Planeta
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h6><i class="fas fa-users me-1"></i>Personajes</h6>
+                            <div class="stat-number">{{ planeta.num_personajes }}</div>
+                            <small class="text-muted">Personajes asociados</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h6><i class="fas fa-calendar me-1"></i>Creado</h6>
+                            <div class="stat-number">{{ planeta.fecha_creacion.strftime('%d/%m/%Y') }}</div>
+                            <small class="text-muted">Fecha de registro</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h6><i class="fas fa-globe me-1"></i>Dimensión</h6>
+                            <div class="stat-number">{{ planeta.dimension }}</div>
+                            <small class="text-muted">Dimensión actual</small>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if planeta.num_personajes > 0 %}
+                <hr>
+                <h6><i class="fas fa-users me-1"></i>Personajes en este planeta:</h6>
+                <div class="row">
+                    {% for personaje in personajes_planeta %}
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-user me-2 text-primary"></i>
+                            <a href="{{ url_for('ver_personaje', personaje_id=personaje.id) }}" class="text-decoration-none">
+                                {{ personaje.nombre }}
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

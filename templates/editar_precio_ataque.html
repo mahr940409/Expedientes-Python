@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Precio - {{ ataque_personaje.ataque.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        Editar Precio de Venta
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            {% if ataque_personaje.ataque.imagen %}
+                            <img src="{{ url_for('static', filename=ataque_personaje.ataque.imagen) }}" 
+                                 class="img-fluid rounded" alt="{{ ataque_personaje.ataque.nombre }}">
+                            {% else %}
+                            <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                 style="height: 200px;">
+                                <i class="fas fa-fist-raised fa-3x text-muted"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <h4 class="text-primary">{{ ataque_personaje.ataque.nombre }}</h4>
+                            <p class="text-muted">{{ ataque_personaje.ataque.descripcion }}</p>
+                            
+                            <div class="row mb-3">
+                                <div class="col-4">
+                                    <div class="bg-success text-white rounded p-2 text-center">
+                                        <i class="fas fa-bolt"></i>
+                                        <div class="fw-bold">{{ ataque_personaje.ataque.poder }}</div>
+                                        <small>Poder</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="bg-info text-white rounded p-2 text-center">
+                                        <i class="fas fa-coins"></i>
+                                        <div class="fw-bold">{{ ataque_personaje.precio_compra }}</div>
+                                        <small>Comprado por</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="bg-warning text-dark rounded p-2 text-center">
+                                        <i class="fas fa-tag"></i>
+                                        <div class="fw-bold">{{ ataque_personaje.precio_venta }}</div>
+                                        <small>Precio actual</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Atención:</strong> Este ataque único ya está en venta. Puedes modificar el precio para hacerlo más atractivo o más competitivo.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="precio_venta" class="form-label">
+                                <strong>Nuevo Precio de Venta (Rastamonios)</strong>
+                            </label>
+                            <input type="number" class="form-control form-control-lg" 
+                                   id="precio_venta" name="precio_venta" 
+                                   min="1" required 
+                                   value="{{ ataque_personaje.precio_venta }}"
+                                   placeholder="Ingresa el nuevo precio de venta">
+                            <div class="form-text">
+                                El precio actual es {{ ataque_personaje.precio_venta }} rastamonios. Establece un nuevo precio.
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('ataques_personaje', personaje_id=ataque_personaje.personaje.id) }}" 
+                               class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-warning btn-lg">
+                                <i class="fas fa-save me-1"></i>Actualizar Precio
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

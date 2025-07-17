@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}{{ clan.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('listar_clanes') }}">Clanes</a></li>
+                    <li class="breadcrumb-item active">{{ clan.nombre }}</li>
+                </ol>
+            </nav>
+            
+            <div class="row">
+                <!-- Información del Clan -->
+                <div class="col-md-4">
+                    <div class="card shadow">
+                        <div class="card-header bg-primary text-white">
+                            <h4 class="mb-0">
+                                <i class="fas fa-users me-2"></i>{{ clan.nombre }}
+                            </h4>
+                        </div>
+                        <div class="card-body text-center">
+                            {% if clan.insignia %}
+                            <img src="{{ url_for('static', filename=clan.insignia) }}" 
+                                 alt="Insignia {{ clan.nombre }}" 
+                                 class="img-fluid mb-3" 
+                                 style="max-width: 150px; max-height: 150px; border-radius: 10px;">
+                            {% else %}
+                            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" 
+                                 style="width: 150px; height: 150px;">
+                                <i class="fas fa-users fa-3x text-white"></i>
+                            </div>
+                            {% endif %}
+                            
+                            <h5 class="card-title">{{ clan.nombre }}</h5>
+                            
+                            {% if clan.descripcion %}
+                            <p class="card-text text-muted">{{ clan.descripcion }}</p>
+                            {% endif %}
+                            
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <h6 class="text-primary">{{ miembros|length }}</h6>
+                                    <small class="text-muted">Miembros</small>
+                                </div>
+                                <div class="col-6">
+                                    <h6 class="text-success">{{ clan.fecha_creacion.strftime('%d/%m/%Y') }}</h6>
+                                    <small class="text-muted">Fundado</small>
+                                </div>
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="text-start">
+                                <h6><i class="fas fa-crown text-warning me-2"></i>Líder</h6>
+                                <p class="mb-2">{{ clan.creador.nombre }}</p>
+                                
+                                <h6><i class="fas fa-calendar text-info me-2"></i>Información</h6>
+                                <small class="text-muted">
+                                    <strong>Creado:</strong> {{ clan.fecha_creacion.strftime('%d/%m/%Y a las %H:%M') }}<br>
+                                    <strong>Estado:</strong> 
+                                    {% if clan.activo %}
+                                    <span class="badge bg-success">Activo</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Inactivo</span>
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Miembros del Clan -->
+                <div class="col-md-8">
+                    <div class="card shadow">
+                        <div class="card-header bg-secondary text-white">
+                            <h4 class="mb-0">
+                                <i class="fas fa-user-friends me-2"></i>Miembros del Clan
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            {% if miembros %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Personaje</th>
+                                            <th>Usuario</th>
+                                            <th>Jerarquía</th>
+                                            <th>Poder</th>
+                                            <th>Ingreso</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for miembro in miembros %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    {% if miembro.foto %}
+                                                    <img src="{{ url_for('static', filename=miembro.foto) }}" 
+                                                         alt="{{ miembro.nombre }}" 
+                                                         class="me-2" 
+                                                         style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;">
+                                                    {% else %}
+                                                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" 
+                                                         style="width: 40px; height: 40px;">
+                                                        <i class="fas fa-user text-white"></i>
+                                                    </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <strong>{{ miembro.nombre }}</strong><br>
+                                                        <small class="text-muted">{{ miembro.rango }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>{{ miembro.creador.username }}</td>
+                                            <td>
+                                                {% if miembro.id == clan.creador_id %}
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="fas fa-crown me-1"></i>Líder
+                                                </span>
+                                                {% else %}
+                                                <span class="badge bg-info">Miembro</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-success">{{ miembro.poder_total }}</span>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">{{ miembro.fecha_creacion.strftime('%d/%m/%Y') }}</small>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-users fa-2x text-muted mb-3"></i>
+                                <h5 class="text-muted">No hay miembros en este clan</h5>
+                                <p class="text-muted">Este clan aún no tiene miembros.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

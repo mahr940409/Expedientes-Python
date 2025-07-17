@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Nuevo Elemento - Expediente Digital{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h3 class="mb-0">
+                    <i class="fas fa-fire me-2"></i>
+                    Crear Nuevo Elemento
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="nombre" class="form-label">
+                            <i class="fas fa-fire me-1"></i>Nombre del Elemento *
+                        </label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" required>
+                        <div class="form-text">Nombre único del elemento (ej: Fuego, Agua, Tierra, Aire, etc.)</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="descripcion" class="form-label">
+                            <i class="fas fa-align-left me-1"></i>Descripción
+                        </label>
+                        <textarea class="form-control" id="descripcion" name="descripcion" rows="4" placeholder="Describe las características y propiedades del elemento..."></textarea>
+                        <div class="form-text">Descripción opcional del elemento</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="es_basico" class="form-label">
+                            <i class="fas fa-layer-group me-1"></i>Tipo de Elemento
+                        </label>
+                        <select class="form-select" id="es_basico" name="es_basico" required>
+                            <option value="true">Elemento Básico (Disponible inmediatamente)</option>
+                            <option value="false">Elemento Avanzado (Requiere aprobación)</option>
+                        </select>
+                        <div class="form-text">
+                            <strong>Básico:</strong> Los usuarios pueden asignarlo directamente a sus personajes.<br>
+                            <strong>Avanzado:</strong> Los usuarios deben solicitar aprobación del administrador.
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('listar_elementos') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-save me-1"></i>Crear Elemento
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Información sobre Elementos
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Los elementos representan las fuerzas naturales que puede controlar un personaje. Algunos ejemplos comunes incluyen:</p>
+                <ul class="text-muted">
+                    <li><strong>Fuego:</strong> Control del fuego, llamas y calor</li>
+                    <li><strong>Agua:</strong> Manipulación del agua, hielo y fluidos</li>
+                    <li><strong>Tierra:</strong> Control de rocas, minerales y terremotos</li>
+                    <li><strong>Aire:</strong> Manipulación del viento y tormentas</li>
+                    <li><strong>Electricidad:</strong> Control de rayos y energía eléctrica</li>
+                    <li><strong>Luz:</strong> Manipulación de la luz y energía sagrada</li>
+                    <li><strong>Oscuridad:</strong> Control de sombras y energía oscura</li>
+                </ul>
+                <p class="text-muted">Los personajes pueden tener múltiples elementos asignados según sus habilidades y poderes.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

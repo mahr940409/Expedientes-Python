@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+
+{% block title %}Editar {{ personaje.nombre }} - Expediente Digital{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h3 class="mb-0">
+                    <i class="fas fa-edit me-2"></i>
+                    Editar Personaje: {{ personaje.nombre }}
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nombre" class="form-label">
+                                    <i class="fas fa-user me-1"></i>Nombre del Personaje *
+                                </label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" value="{{ personaje.nombre }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="dimension" class="form-label">
+                                    <i class="fas fa-globe me-1"></i>Dimensión de Origen *
+                                </label>
+                                <select class="form-select" id="dimension" name="dimension" required onchange="togglePlaneta()">
+                                    <option value="">Seleccionar dimensión</option>
+                                    <option value="Universo" {% if personaje.dimension == 'Universo' %}selected{% endif %}>Universo</option>
+                                    <option value="Cielo" {% if personaje.dimension == 'Cielo' %}selected{% endif %}>Cielo</option>
+                                    <option value="Infierno" {% if personaje.dimension == 'Infierno' %}selected{% endif %}>Infierno</option>
+                                    <option value="Limbo" {% if personaje.dimension == 'Limbo' %}selected{% endif %}>Limbo</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="planeta" class="form-label">
+                                    <i class="fas fa-planet-ringed me-1"></i>Planeta de Origen
+                                </label>
+                                <select class="form-select" id="planeta" name="planeta">
+                                    <option value="">Selecciona un planeta</option>
+                                    <option value="nuevo">+ Agregar nuevo planeta</option>
+                                </select>
+                                <div class="form-text">Planeta específico donde nació o vive el personaje</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edad" class="form-label">
+                                    <i class="fas fa-birthday-cake me-1"></i>Edad *
+                                </label>
+                                <input type="number" class="form-control" id="edad" name="edad" value="{{ personaje.edad }}" min="1" max="999" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="rango" class="form-label">
+                                    <i class="fas fa-crown me-1"></i>Rango *
+                                </label>
+                                <select class="form-select" id="rango" name="rango" required onchange="updateRangoOptions()">
+                                    <option value="">Seleccionar rango</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="foto" class="form-label">
+                                    <i class="fas fa-camera me-1"></i>Fotografía *
+                                </label>
+                                <input type="file" class="form-control" id="foto" name="foto" accept="image/*" required>
+                                <div class="form-text">Formatos permitidos: PNG, JPG, JPEG, GIF, WEBP</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if personaje.foto %}
+                    <div class="mb-3">
+                        <label class="form-label">Imagen Actual</label>
+                        <div>
+                            <img src="{{ url_for('static', filename=personaje.foto) }}" class="img-thumbnail" alt="{{ personaje.nombre }}" style="max-height: 200px;">
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label for="descripcion" class="form-label">
+                            <i class="fas fa-align-left me-1"></i>Descripción General *
+                        </label>
+                        <textarea class="form-control" id="descripcion" name="descripcion" rows="4" required>{{ personaje.descripcion }}</textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('ver_personaje', personaje_id=personaje.id) }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-save me-1"></i>Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Información del Personaje
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h6><i class="fas fa-sword me-1"></i>Armas</h6>
+                            <div class="stat-number">{{ personaje.armas_nuevas|length }}</div>
+                            <a href="{{ url_for('ver_personaje', personaje_id=personaje.id) }}#armas" class="btn btn-sm btn-outline-primary">
+                                Gestionar Armas
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h6><i class="fas fa-magic me-1"></i>Invocaciones</h6>
+                            <div class="stat-number">{{ personaje.invocaciones|length }}</div>
+                            <a href="{{ url_for('ver_personaje', personaje_id=personaje.id) }}#invocaciones" class="btn btn-sm btn-outline-success">
+                                Gestionar Invocaciones
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h6><i class="fas fa-calendar me-1"></i>Creado</h6>
+                            <div class="stat-number">{{ personaje.fecha_creacion.strftime('%d/%m/%Y') if personaje.fecha_creacion else 'N/A' }}</div>
+                            <small class="text-muted">Fecha de registro</small>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if personaje.dimension != 'Universo' and personaje.planeta %}
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Nota:</strong> Este personaje tiene un planeta asignado pero pertenece a "{{ personaje.dimension }}". 
+                    Los planetas solo se aplican a personajes del universo. Considera cambiar la dimensión o eliminar el planeta.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Rangos por dimensión
+    const rangosPorDimension = {
+        'Universo': [],
+        'Cielo': ['Ángeles', 'Arcángeles', 'Principados', 'Potestades', 'Virtudes', 'Dominaciones', 'Tronos', 'Serafines'],
+        'Infierno': ['Almas Condenadas', 'Demonios Menores', 'Caballeros Inferiores', 'Generales del Caos', 'Condes de las Sombras', 'Marqueses del Fuego', 'Duques del Abismo', 'Príncipes Demoníacos', 'Reyes del Infierno'],
+        'Limbo': []
+    };
+
+    function togglePlaneta() {
+        const dimension = document.getElementById('dimension').value;
+        const planetaField = document.getElementById('planeta');
+        const planetaLabel = planetaField.previousElementSibling;
+        const planetaContainer = planetaField.closest('.col-md-6');
+        
+        if (dimension === 'Universo') {
+            planetaContainer.style.display = 'block';
+            planetaField.required = true;
+            loadPlanetasPorDimension(dimension);
+        } else {
+            planetaContainer.style.display = 'none';
+            planetaField.required = false;
+            planetaField.value = '';
+        }
+        
+        updateRangoOptions();
+    }
+
+    function loadPlanetasPorDimension(dimension) {
+        const planetaSelect = document.getElementById('planeta');
+        const currentPlaneta = '{{ personaje.planeta or "" }}';
+        
+        // Limpiar opciones actuales excepto la primera y la de agregar nuevo
+        planetaSelect.innerHTML = '<option value="">Selecciona un planeta</option><option value="nuevo">+ Agregar nuevo planeta</option>';
+        
+        // Cargar planetas desde la API
+        fetch(`/api/planetas/${encodeURIComponent(dimension)}`)
+            .then(response => response.json())
+            .then(planetas => {
+                planetas.forEach(planeta => {
+                    const option = document.createElement('option');
+                    option.value = planeta.nombre;
+                    option.textContent = planeta.nombre;
+                    if (planeta.nombre === currentPlaneta) {
+                        option.selected = true;
+                    }
+                    planetaSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error cargando planetas:', error);
+            });
+    }
+
+    function handlePlanetaChange() {
+        const planetaSelect = document.getElementById('planeta');
+        if (planetaSelect.value === 'nuevo') {
+            // Redirigir a la página de crear nuevo planeta
+            window.location.href = '/planeta/nuevo';
+        }
+    }
+
+    function updateRangoOptions() {
+        const dimension = document.getElementById('dimension').value;
+        const rangoSelect = document.getElementById('rango');
+        const currentRango = '{{ personaje.rango }}';
+        
+        // Limpiar opciones actuales
+        rangoSelect.innerHTML = '<option value="">Seleccionar rango</option>';
+        
+        if (dimension === 'Universo' || dimension === 'Limbo') {
+            // Para el universo y el limbo, permitir texto libre
+            rangoSelect.innerHTML = '<option value="">Ingresa el rango</option>';
+            rangoSelect.style.display = 'none';
+            // Crear campo de texto para rango
+            let rangoInput = document.getElementById('rango_input');
+            if (!rangoInput) {
+                rangoInput = document.createElement('input');
+                rangoInput.type = 'text';
+                rangoInput.className = 'form-control';
+                rangoInput.id = 'rango_input';
+                rangoInput.name = 'rango';
+                rangoInput.required = true;
+                rangoInput.placeholder = dimension === 'Universo' ? 'Ej: Guerrero, Mago, Rey, etc.' : 'Ej: Alma Perdida, Espíritu Errante, etc.';
+                rangoInput.value = currentRango;
+                rangoSelect.parentNode.appendChild(rangoInput);
+            }
+            rangoInput.style.display = 'block';
+        } else if (dimension && rangosPorDimension[dimension]) {
+            rangoSelect.style.display = 'block';
+            // Ocultar campo de texto si existe
+            let rangoInput = document.getElementById('rango_input');
+            if (rangoInput) {
+                rangoInput.style.display = 'none';
+            }
+            
+            rangosPorDimension[dimension].forEach(rango => {
+                const option = document.createElement('option');
+                option.value = rango;
+                option.textContent = rango;
+                if (rango === currentRango) {
+                    option.selected = true;
+                }
+                rangoSelect.appendChild(option);
+            });
+        }
+    }
+
+    // Inicializar al cargar la página
+    document.addEventListener('DOMContentLoaded', function() {
+        // Verificar que los elementos existen antes de llamar a las funciones
+        if (document.getElementById('dimension')) {
+            togglePlaneta();
+            updateRangoOptions();
+        }
+        
+        // Agregar event listener para el cambio de planeta
+        const planetaSelect = document.getElementById('planeta');
+        if (planetaSelect) {
+            planetaSelect.addEventListener('change', handlePlanetaChange);
+        }
+        
+        // Manejar el envío del formulario para copiar el valor del campo de texto al select
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const dimension = document.getElementById('dimension');
+                if (dimension && (dimension.value === 'Universo' || dimension.value === 'Limbo')) {
+                    const rangoInput = document.getElementById('rango_input');
+                    const rangoSelect = document.getElementById('rango');
+                    if (rangoInput && rangoInput.value.trim() && rangoSelect) {
+                        // Crear una opción temporal en el select con el valor del input
+                        rangoSelect.innerHTML = '';
+                        const option = document.createElement('option');
+                        option.value = rangoInput.value.trim();
+                        option.textContent = rangoInput.value.trim();
+                        option.selected = true;
+                        rangoSelect.appendChild(option);
+                    }
+                }
+            });
+        }
+    });
+
+    // Preview de nueva imagen
+    const fotoInput = document.getElementById('foto');
+    if (fotoInput) {
+        fotoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Crear preview si no existe
+                    let preview = document.getElementById('image-preview');
+                    if (!preview) {
+                        preview = document.createElement('img');
+                        preview.id = 'image-preview';
+                        preview.className = 'img-thumbnail mt-2';
+                        preview.style.maxHeight = '200px';
+                        const fotoParent = document.getElementById('foto').parentNode;
+                        if (fotoParent) {
+                            fotoParent.appendChild(preview);
+                        }
+                    }
+                    preview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+</script>
+{% endblock %} 

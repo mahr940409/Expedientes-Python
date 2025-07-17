@@ -1,0 +1,840 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+/* Mejorar visibilidad y alineación de los checkboxes de elementos */
+#elementos-container .form-check-label {
+    color: #212529 !important;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+}
+#elementos-container .form-check-input:disabled + .form-check-label {
+    color: #adb5bd !important;
+}
+#elementos-container .badge {
+    font-size: 0.85em;
+    vertical-align: middle;
+    margin-left: 0.5em;
+}
+
+/* Soporte para modo oscuro en el modal de elementos */
+@media (prefers-color-scheme: dark) {
+    .modal-content {
+        background-color: #23272b !important;
+        color: #f8f9fa !important;
+    }
+    .modal-header, .modal-footer {
+        background-color: #23272b !important;
+        color: #f8f9fa !important;
+        border-color: #343a40 !important;
+    }
+    #elementos-container .form-check-label {
+        color: #f8f9fa !important;
+    }
+    #elementos-container .form-check-input:disabled + .form-check-label {
+        color: #6c757d !important;
+    }
+    .modal-title, .modal-body, .modal-footer, .alert-info {
+        color: #f8f9fa !important;
+    }
+    .alert-info {
+        background-color: #2c3035 !important;
+        border-color: #343a40 !important;
+    }
+    .btn-close {
+        filter: invert(1);
+    }
+}
+</style>
+{% endblock %}
+
+{% block title %}{{ personaje.nombre }} - Expediente Digital{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Inicio</a></li>
+                <li class="breadcrumb-item active">{{ personaje.nombre }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <h2>{{ personaje.nombre }}</h2>
+    </div>
+    <div class="col-md-6 text-end">
+        <div class="display-6 fw-bold text-success">
+            <i class="fas fa-coins me-2"></i>{{ personaje.rastamonios }} rastamonios
+        </div>
+        <small class="text-muted">Monedas disponibles</small>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Información Principal del Personaje -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-user me-2"></i>
+                    {{ personaje.nombre }}
+                </h4>
+            </div>
+            <div class="card-body text-center">
+                {% if personaje.foto %}
+                    <img src="{{ url_for('static', filename=personaje.foto) }}" class="img-fluid rounded mb-3" alt="{{ personaje.nombre }}" style="max-height: 300px; object-fit: cover;">
+                {% else %}
+                    <div class="bg-light rounded d-flex align-items-center justify-content-center mb-3" style="height: 300px;">
+                        <i class="fas fa-user fa-5x text-muted"></i>
+                    </div>
+                {% endif %}
+                
+                <!-- Rastamonios destacados -->
+                <div class="alert alert-success mb-3">
+                    <div class="text-center">
+                        <div class="display-5 fw-bold text-success mb-1">
+                            <i class="fas fa-coins me-2"></i>{{ personaje.rastamonios }}
+                        </div>
+                        <div class="text-success">rastamonios disponibles</div>
+                    </div>
+                </div>
+                
+                <div class="row text-start">
+                    <div class="col-6">
+                        <p><strong><i class="fas fa-globe me-1"></i>Dimensión:</strong></p>
+                        {% if personaje.dimension %}
+                        <p><strong><i class="fas fa-planet-ringed me-1"></i>Planeta:</strong></p>
+                        {% endif %}
+                        <p><strong><i class="fas fa-birthday-cake me-1"></i>Edad:</strong></p>
+                        <p><strong><i class="fas fa-crown me-1"></i>Rango:</strong></p>
+                        <p><strong><i class="fas fa-star me-1"></i>Nivel:</strong></p>
+                        <p><strong><i class="fas fa-bolt me-1"></i>Poder Total:</strong></p>
+                    </div>
+                    <div class="col-6">
+                        <p>{% if personaje.dimension %}{{ personaje.dimension }}{% else %}<span class="text-warning">Sin asignar</span>{% endif %}</p>
+                        {% if personaje.dimension %}
+                        <p>{% if personaje.planeta %}{{ personaje.planeta }}{% else %}<span class="text-warning">Sin asignar</span>{% endif %}</p>
+                        {% endif %}
+                        <p>{{ personaje.edad }} años</p>
+                        <p><span class="badge bg-warning text-dark">{{ personaje.rango }}</span></p>
+                        <p><span class="badge nivel-{{ personaje.nivel_auto|lower }}">{{ personaje.nivel_auto }}</span></p>
+                        <p><span class="badge bg-primary fs-6">{{ personaje.poder_total }} pts</span></p>
+                        <div class="mt-2">
+                            <small>
+                                {% if personaje.siguiente_nivel_info.nivel_siguiente %}
+                                    Te faltan <strong>{{ personaje.siguiente_nivel_info.falta }}</strong> pts para subir a nivel <strong>{{ personaje.siguiente_nivel_info.nivel_siguiente }}</strong>
+                                {% else %}
+                                    ¡Has alcanzado el nivel máximo!
+                                {% endif %}
+                            </small>
+                            <div class="progress mt-1" style="height: 18px;">
+                                <div class="progress-bar bg-info" role="progressbar" style="width: {{ personaje.siguiente_nivel_info.progreso }}%;" aria-valuenow="{{ personaje.siguiente_nivel_info.progreso }}" aria-valuemin="0" aria-valuemax="100">
+                                    {{ personaje.siguiente_nivel_info.progreso }}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if personaje.dimension and personaje.dimension != 'Universo' and personaje.planeta %}
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Atención:</strong> Este personaje tiene un planeta asignado pero pertenece a "{{ personaje.dimension }}". 
+                    Los planetas solo se aplican a personajes del universo.
+                </div>
+                {% endif %}
+                
+                <hr>
+                
+                <h6><i class="fas fa-align-left me-1"></i>Descripción General</h6>
+                <p class="text-muted">{{ personaje.descripcion }}</p>
+                
+                <hr>
+                
+                {% if personaje.clan %}
+                <hr>
+                <h6><i class="fas fa-users me-1"></i>Clan</h6>
+                <div class="d-flex align-items-center justify-content-center mb-2">
+                    {% if personaje.clan.insignia %}
+                    <img src="{{ url_for('static', filename=personaje.clan.insignia) }}" 
+                         alt="Insignia {{ personaje.clan.nombre }}" 
+                         class="me-2" 
+                         style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;">
+                    {% else %}
+                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" 
+                         style="width: 40px; height: 40px;">
+                        <i class="fas fa-users text-white"></i>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <strong>{{ personaje.clan.nombre }}</strong><br>
+                        <small class="text-muted">
+                            {% if personaje.id == personaje.clan.creador_id %}
+                            <i class="fas fa-crown text-warning"></i> Líder
+                            {% else %}
+                            <i class="fas fa-user"></i> Miembro
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+                {% else %}
+                <hr>
+                <h6><i class="fas fa-users me-1"></i>Clan</h6>
+                <div class="text-center mb-3">
+                    <div class="bg-light rounded p-3 mb-3">
+                        <i class="fas fa-users fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-3">Este personaje no pertenece a ningún clan</p>
+                        {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
+                        <div class="d-flex flex-column gap-2">
+                            <a href="{{ url_for('nuevo_clan') }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus me-1"></i>Crear Nuevo Clan
+                            </a>
+                            <a href="{{ url_for('listar_clanes') }}" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-search me-1"></i>Ver Clanes Disponibles
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <h6><i class="fas fa-fire me-1"></i>Elementos Controlados</h6>
+                {% if personaje.elementos %}
+                    {% set elementos_lista = personaje.elementos|from_json %}
+                    {% if elementos_lista %}
+                        <div class="mb-3">
+                            {% for elemento in elementos_lista %}
+                                <span class="elemento-badge elemento-{{ elemento|lower }}">{{ elemento }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No tiene elementos asignados</p>
+                    {% endif %}
+                {% else %}
+                    <p class="text-muted">No tiene elementos asignados</p>
+                {% endif %}
+                {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
+                <button type="button" class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#elementosModal">
+                    <i class="fas fa-edit me-1"></i>Editar Elementos
+                </button>
+                {% endif %}
+                
+                {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
+                <div class="d-flex justify-content-center gap-3 mt-3 flex-wrap">
+                    <a href="{{ url_for('editar_personaje', personaje_id=personaje.id) }}" class="btn btn-outline-primary d-flex flex-column align-items-center shadow-sm px-4 py-2">
+                        <i class="fas fa-edit fa-2x mb-1"></i>
+                        <span class="fw-semibold">Editar</span>
+                    </a>
+                    <a href="{{ url_for('asignar_planeta_personaje', personaje_id=personaje.id) }}" class="btn btn-outline-warning d-flex flex-column align-items-center shadow-sm px-4 py-2">
+                        <i class="fas fa-globe fa-2x mb-1"></i>
+                        <span class="fw-semibold">Dimensión/Planeta</span>
+                    </a>
+                    <a href="{{ url_for('cambiar_imagen_personaje', personaje_id=personaje.id) }}" class="btn btn-outline-info d-flex flex-column align-items-center shadow-sm px-4 py-2">
+                        <i class="fas fa-image fa-2x mb-1"></i>
+                        <span class="fw-semibold">Cambiar Imagen</span>
+                    </a>
+                    <a href="{{ url_for('ataques_personaje', personaje_id=personaje.id) }}" class="btn btn-outline-success d-flex flex-column align-items-center shadow-sm px-4 py-2">
+                        <i class="fas fa-fist-raised fa-2x mb-1"></i>
+                        <span class="fw-semibold">Ataques</span>
+                    </a>
+                    <button type="button" class="btn btn-outline-danger d-flex flex-column align-items-center shadow-sm px-4 py-2" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="fas fa-trash fa-2x mb-1"></i>
+                        <span class="fw-semibold">Eliminar</span>
+                    </button>
+                </div>
+                {% endif %}
+                
+                <!-- Acciones Rápidas del Personaje -->
+                <hr>
+                <h6><i class="fas fa-bolt me-1"></i>Acciones Rápidas</h6>
+                <div class="d-flex flex-column gap-2">
+                    <a href="{{ url_for('tienda_personaje', personaje_id=personaje.id) }}" class="btn btn-success d-flex align-items-center justify-content-between">
+                        <div>
+                            <i class="fas fa-store me-2"></i>
+                            <strong>Ir a Tienda</strong>
+                        </div>
+                        <small class="text-light">{{ personaje.rastamonios }} rastamonios</small>
+                    </a>
+                    
+                    <a href="{{ url_for('ataques_personaje_contextual', personaje_id=personaje.id) }}" class="btn btn-primary d-flex align-items-center justify-content-between">
+                        <div>
+                            <i class="fas fa-fist-raised me-2"></i>
+                            <strong>Comprar Ataques</strong>
+                        </div>
+                        <small class="text-light">Ver disponibles</small>
+                    </a>
+                    
+                    <a href="{{ url_for('misiones_personaje_contextual', personaje_id=personaje.id) }}" class="btn btn-warning d-flex align-items-center justify-content-between">
+                        <div>
+                            <i class="fas fa-tasks me-2"></i>
+                            <strong>Hacer Misiones</strong>
+                        </div>
+                        <small class="text-dark">Ganar recompensas</small>
+                    </a>
+                    
+                    {% if not personaje.clan %}
+                    <a href="{{ url_for('clanes_personaje_contextual', personaje_id=personaje.id) }}" class="btn btn-info d-flex align-items-center justify-content-between">
+                        <div>
+                            <i class="fas fa-users me-2"></i>
+                            <strong>Unirse a Clan</strong>
+                        </div>
+                        <small class="text-light">Ver clanes</small>
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('ver_clan', clan_id=personaje.clan.id) }}" class="btn btn-info d-flex align-items-center justify-content-between">
+                        <div>
+                            <i class="fas fa-users me-2"></i>
+                            <strong>Ver Mi Clan</strong>
+                        </div>
+                        <small class="text-light">{{ personaje.clan.nombre }}</small>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Solicitudes Pendientes de Planeta -->
+    {% if solicitudes_pendientes %}
+    <!-- Banner compacto de solicitudes -->
+    <div class="alert alert-warning d-flex align-items-center justify-content-between shadow-sm mb-3" style="border-radius: 10px;">
+        <div>
+            <i class="fas fa-clock me-2"></i>
+            <strong>Tienes {{ solicitudes_pendientes|length }} solicitud{{ 'es' if solicitudes_pendientes|length > 1 else '' }} pendiente{{ 's' if solicitudes_pendientes|length > 1 else '' }} de acceso a planeta</strong>
+        </div>
+        <button class="btn btn-sm btn-outline-dark" type="button" data-bs-toggle="collapse" data-bs-target="#solicitudesPlanetaCollapse" aria-expanded="false" aria-controls="solicitudesPlanetaCollapse">
+            <i class="fas fa-chevron-down"></i> Ver detalles
+        </button>
+    </div>
+    <!-- Acordeón de detalles -->
+    <div class="collapse" id="solicitudesPlanetaCollapse">
+        <div class="row g-3 mb-4">
+            {% for solicitud in solicitudes_pendientes %}
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card border-warning shadow-sm h-100" style="border-radius: 12px; background: #23272b; color: #f8f9fa;">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-globe fa-lg me-2 text-warning"></i>
+                            <span class="fw-bold">{{ solicitud.planeta.nombre }}</span>
+                        </div>
+                        <div class="mb-1 small text-muted">
+                            <i class="fas fa-layer-group me-1"></i> {{ solicitud.planeta.dimension }}
+                        </div>
+                        <div class="mb-1 small text-muted">
+                            <i class="fas fa-calendar me-1"></i> {{ solicitud.fecha_solicitud.strftime('%d/%m/%Y %H:%M') }}
+                        </div>
+                        {% if solicitud.planeta.duenio %}
+                        <div class="mb-2 small text-muted">
+                            <i class="fas fa-user me-1"></i> Dueño: {{ solicitud.planeta.duenio.username }}
+                        </div>
+                        {% endif %}
+                        <form action="{{ url_for('cancelar_solicitud_planeta', solicitud_id=solicitud.id) }}" method="POST" class="mt-2">
+                            <button type="submit" class="btn btn-outline-danger btn-sm w-100" onclick="return confirm('¿Estás seguro de que quieres cancelar esta solicitud?')">
+                                <i class="fas fa-times me-1"></i>Cancelar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Armas e Invocaciones -->
+    <div class="col-lg-8">
+        <!-- Armas -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-sword me-2"></i>
+                    Armas ({{ personaje.armas_nuevas|length }})
+                </h5>
+                {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
+                <a href="{{ url_for('nueva_solicitud_arma', personaje_id=personaje.id) }}" class="btn btn-sm btn-outline-dark">
+                    <i class="fas fa-plus me-1"></i>Solicitar Arma
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if personaje.armas_nuevas %}
+                    <div class="row row-cols-1 row-cols-md-2 g-3">
+                        {% for arma in personaje.armas_nuevas %}
+                        <div class="col">
+                            <div class="card h-100">
+                                {% if arma.imagen %}
+                                    {% set ruta_imagen = arma.imagen if arma.imagen.startswith('uploads/') else 'uploads/' + arma.imagen %}
+                                    <img src="{{ url_for('static', filename=ruta_imagen) }}" class="card-img-top" alt="{{ arma.nombre }}" style="height: 200px; object-fit: contain; background-color: #f8f9fa;">
+                                {% else %}
+                                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                        <i class="fas fa-sword fa-2x text-muted"></i>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ arma.nombre }}</h6>
+                                    <p class="card-text small">{{ arma.descripcion[:100] }}{% if arma.descripcion|length > 100 %}...{% endif %}</p>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-bolt"></i> {{ arma.poder }} Poder
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
+                                <div class="card-footer bg-transparent border-0">
+                                    <form action="{{ url_for('eliminar_arma', personaje_id=personaje.id, arma_id=arma.id) }}" method="POST" style="display: inline;">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm w-100" onclick="return confirm('¿Eliminar esta arma?')">
+                                            <i class="fas fa-trash me-1"></i>Eliminar
+                                        </button>
+                                    </form>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-sword fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No hay armas registradas para este personaje</p>
+                        {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
+                        <a href="{{ url_for('nueva_solicitud_arma', personaje_id=personaje.id) }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Solicitar Primera Arma
+                        </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Invocaciones -->
+        <div class="card">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-magic me-2"></i>
+                    Invocaciones ({{ personaje.invocaciones_nuevas|length }})
+                </h5>
+                {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
+                <a href="{{ url_for('nueva_solicitud_invocacion', personaje_id=personaje.id) }}" class="btn btn-sm btn-outline-light">
+                    <i class="fas fa-plus me-1"></i>Solicitar Invocación
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if personaje.invocaciones_nuevas %}
+                    <div class="row row-cols-1 row-cols-md-2 g-3">
+                        {% for invocacion in personaje.invocaciones_nuevas %}
+                        <div class="col">
+                            <div class="card h-100">
+                                {% if invocacion.imagen %}
+                                    {% set ruta_imagen = invocacion.imagen if invocacion.imagen.startswith('uploads/') else 'uploads/' + invocacion.imagen %}
+                                    <img src="{{ url_for('static', filename=ruta_imagen) }}" class="card-img-top" alt="{{ invocacion.nombre }}" style="height: 200px; object-fit: contain; background-color: #f8f9fa;">
+                                {% else %}
+                                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                        <i class="fas fa-magic fa-2x text-muted"></i>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ invocacion.nombre }}</h6>
+                                    <p class="card-text small">{{ invocacion.descripcion[:100] }}{% if invocacion.descripcion|length > 100 %}...{% endif %}</p>
+                                    
+                                    <div class="mb-2">
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-bolt"></i> {{ invocacion.poder }} Poder
+                                        </span>
+                                    </div>
+                                    
+                                    {% if invocacion.elementos %}
+                                        <div class="mb-2">
+                                            {% for elemento in invocacion.elementos %}
+                                                <span class="elemento-badge elemento-{{ elemento|lower }}">{{ elemento }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
+                                <div class="card-footer bg-transparent border-0">
+                                    <form action="{{ url_for('eliminar_invocacion', personaje_id=personaje.id, invocacion_id=invocacion.id) }}" method="POST" style="display: inline;">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm w-100" onclick="return confirm('¿Eliminar esta invocación?')">
+                                            <i class="fas fa-trash me-1"></i>Eliminar
+                                        </button>
+                                    </form>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-magic fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No hay invocaciones registradas para este personaje</p>
+                        {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
+                        <a href="{{ url_for('nueva_solicitud_invocacion', personaje_id=personaje.id) }}" class="btn btn-success">
+                            <i class="fas fa-plus me-1"></i>Solicitar Primera Invocación
+                        </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Ataques Comprados -->
+        <div class="card mt-4">
+            <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-fist-raised me-2"></i>
+                    Ataques Comprados ({{ personaje.ataques_comprados|length }}/50)
+                </h5>
+                {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
+                <a href="{{ url_for('ataques_personaje', personaje_id=personaje.id) }}" class="btn btn-sm btn-outline-light">
+                    <i class="fas fa-cog me-1"></i>Gestionar Ataques
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if personaje.ataques_comprados %}
+                    <div class="row row-cols-1 row-cols-md-2 g-3">
+                        {% for ataque_personaje in personaje.ataques_comprados %}
+                        <div class="col">
+                            <div class="card h-100 {% if ataque_personaje.en_venta %}border-warning{% endif %}">
+                                {% if ataque_personaje.ataque.imagen %}
+                                    <img src="{{ url_for('static', filename=ataque_personaje.ataque.imagen) }}" class="card-img-top" alt="{{ ataque_personaje.ataque.nombre }}" style="height: 150px; object-fit: cover;">
+                                {% else %}
+                                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
+                                        <i class="fas fa-fist-raised fa-2x text-muted"></i>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="card-title mb-0">{{ ataque_personaje.ataque.nombre }}</h6>
+                                        {% if ataque_personaje.en_venta %}
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="fas fa-tags"></i> En Venta
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <p class="card-text small">{{ ataque_personaje.ataque.descripcion[:80] }}{% if ataque_personaje.ataque.descripcion|length > 80 %}...{% endif %}</p>
+                                    
+                                    <div class="row text-center mb-2">
+                                        <div class="col-4">
+                                            <div class="bg-success text-white rounded p-1">
+                                                <small><i class="fas fa-bolt"></i></small>
+                                                <div class="fw-bold">{{ ataque_personaje.ataque.poder }}</div>
+                                                <small>Poder</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="bg-info text-white rounded p-1">
+                                                <small><i class="fas fa-coins"></i></small>
+                                                <div class="fw-bold">{{ ataque_personaje.precio_compra }}</div>
+                                                <small>Comprado</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="bg-secondary text-white rounded p-1">
+                                                <small><i class="fas fa-calendar"></i></small>
+                                                <div class="fw-bold">{{ ataque_personaje.fecha_compra.strftime('%d/%m') }}</div>
+                                                <small>Fecha</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if ataque_personaje.en_venta %}
+                                    <div class="alert alert-warning py-1 mb-2">
+                                        <small><strong>Precio de Venta:</strong> {{ ataque_personaje.precio_venta }} rastamonios</small>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
+                                <div class="card-footer bg-transparent border-0">
+                                    {% if ataque_personaje.en_venta %}
+                                    <form action="{{ url_for('cancelar_venta_ataque', ataque_personaje_id=ataque_personaje.id) }}" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-outline-secondary btn-sm w-100" onclick="return confirm('¿Cancelar la venta de este ataque?')">
+                                            <i class="fas fa-times me-1"></i>Cancelar Venta
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                        {% if ataque_personaje.ataque.es_unico %}
+                                        <form action="{{ url_for('vender_ataque', ataque_personaje_id=ataque_personaje.id) }}" method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-outline-warning btn-sm w-100">
+                                                <i class="fas fa-tags me-1"></i>Poner en Venta
+                                            </button>
+                                        </form>
+                                        {% else %}
+                                        <form action="{{ url_for('vender_ataque', ataque_personaje_id=ataque_personaje.id) }}" method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-outline-success btn-sm w-100" onclick="return confirm('¿Vender este ataque automáticamente por {{ (ataque_personaje.precio_compra * 0.75)|int }} rastamonios?')">
+                                                <i class="fas fa-coins me-1"></i>Vender Automáticamente
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-fist-raised fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No hay ataques comprados para este personaje</p>
+                        {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
+                        <a href="{{ url_for('ataques') }}" class="btn btn-danger">
+                            <i class="fas fa-shopping-cart me-1"></i>Comprar Primer Ataque
+                        </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Items Comprados en la Tienda -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-shopping-bag me-2"></i>
+                    Items de la Tienda ({{ personaje.compras|length }})
+                </h5>
+                                        <a href="{{ url_for('tienda_personaje', personaje_id=personaje.id) }}" class="btn btn-sm btn-outline-light">
+                            <i class="fas fa-store me-1"></i>Ir a la Tienda
+                        </a>
+            </div>
+            <div class="card-body">
+                {% if personaje.compras %}
+                    <div class="row row-cols-1 row-cols-md-2 g-3">
+                        {% for compra in personaje.compras %}
+                        <div class="col">
+                            <div class="card h-100">
+                                {% if compra.item.imagen %}
+                                    <img src="{{ url_for('static', filename=compra.item.imagen) }}" class="card-img-top" alt="{{ compra.item.nombre }}" style="height: 200px; object-fit: contain; background-color: #f8f9fa;">
+                                {% else %}
+                                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                        <i class="fas fa-shopping-bag fa-2x text-muted"></i>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ compra.item.nombre }}</h6>
+                                    <p class="card-text small">{{ compra.item.descripcion[:100] }}{% if compra.item.descripcion and compra.item.descripcion|length > 100 %}...{% endif %}</p>
+                                    
+                                    <div class="mb-2">
+                                        <span class="badge bg-warning text-dark me-2">
+                                            <i class="fas fa-coins"></i> {{ compra.item.precio }} rastamonios
+                                        </span>
+                                        {% if compra.item.es_unico %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-star"></i> Único
+                                        </span>
+                                        {% if compra.en_venta %}
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-tag"></i> En venta
+                                        </span>
+                                        {% endif %}
+                                        {% endif %}
+                                        {% if compra.item.poder_adicional > 0 %}
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-fist-raised"></i> +{{ compra.item.poder_adicional }} poder
+                                        </span>
+                                        {% endif %}
+                                        {% if compra.cantidad > 1 %}
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-times"></i> x{{ compra.cantidad }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar me-1"></i>
+                                        Comprado: {{ compra.fecha.strftime('%d/%m/%Y %H:%M') }}
+                                    </small>
+                                </div>
+                                
+                                <div class="card-footer bg-transparent border-0">
+                                    {% if compra.item.es_unico %}
+                                        {% if compra.en_venta %}
+                                            <span class="badge bg-info">En venta</span>
+                                            <button class="btn btn-secondary btn-sm mt-2" disabled>No disponible para vender</button>
+                                        {% else %}
+                                            <form method="GET" action="{{ url_for('vender_item', personaje_id=personaje.id, compra_id=compra.id) }}" style="display:inline;">
+                                                <button class="btn btn-warning btn-sm mt-2">Vender</button>
+                                            </form>
+                                        {% endif %}
+                                    {% else %}
+                                        <form method="GET" action="{{ url_for('vender_item', personaje_id=personaje.id, compra_id=compra.id) }}" style="display:inline;">
+                                            <button class="btn btn-warning btn-sm mt-2">Vender</button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No hay items comprados en la tienda</p>
+                        <a href="{{ url_for('tienda_personaje', personaje_id=personaje.id) }}" class="btn btn-info">
+                            <i class="fas fa-store me-1"></i>Ir a la Tienda
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para eliminar personaje -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar al personaje <strong>{{ personaje.nombre }}</strong>?</p>
+                <p class="text-danger"><small>Esta acción eliminará también todas sus armas e invocaciones y no se puede deshacer.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form action="{{ url_for('eliminar_personaje', personaje_id=personaje.id) }}" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Modal para editar elementos -->
+<div class="modal fade" id="elementosModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-fire me-2"></i>
+                    Editar Elementos del Personaje
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('actualizar_elementos_personaje', personaje_id=personaje.id) }}" method="POST">
+                <div class="modal-body">
+                    <div class="alert alert-info mb-3">
+                        <h6><i class="fas fa-info-circle me-1"></i>Sistema de Elementos</h6>
+                        <ul class="mb-0 small">
+                            <li><span class="badge bg-success me-1"><i class="fas fa-check-circle me-1"></i>Básico</span> - Disponible inmediatamente</li>
+                            <li><span class="badge bg-warning me-1"><i class="fas fa-clock me-1"></i>Avanzado</span> - Requiere solicitud y aprobación</li>
+                        </ul>
+                    </div>
+                    <p class="text-muted mb-3">Selecciona los elementos que puede controlar este personaje:</p>
+                    <div id="elementos-container">
+                        <!-- Los elementos se cargarán dinámicamente aquí -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="me-auto">
+                        <a href="{{ url_for('nueva_solicitud') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-clipboard-list me-1"></i>Solicitar Elementos Avanzados
+                        </a>
+                    </div>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-save me-1"></i>Guardar Elementos
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Cargar elementos dinámicamente
+document.addEventListener('DOMContentLoaded', function() {
+    const elementosContainer = document.getElementById('elementos-container');
+    
+    console.log('🔄 Cargando elementos...');
+    
+    fetch('/api/elementos-disponibles/{{ personaje.id }}')
+        .then(response => {
+            console.log('📡 Respuesta de la API:', response.status);
+            if (!response.ok) {
+                throw new Error('No tienes permisos para editar este personaje');
+            }
+            return response.json();
+        })
+        .then(elementos => {
+            console.log('📋 Elementos disponibles recibidos:', elementos);
+            
+            // Limpiar contenedor
+            elementosContainer.innerHTML = '';
+            
+            if (elementos.length === 0) {
+                elementosContainer.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            No hay elementos disponibles para este personaje.
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            elementos.forEach(elemento => {
+                console.log('➕ Agregando elemento:', elemento.nombre);
+                const div = document.createElement('div');
+                div.className = 'col-md-3 mb-2';
+                
+                // Marcar elementos básicos vs avanzados
+                const badgeClass = elemento.es_basico ? 'bg-success' : 'bg-warning';
+                const badgeText = elemento.es_basico ? 'Básico' : 'Avanzado';
+                const badgeIcon = elemento.es_basico ? 'fa-check-circle' : 'fa-clock';
+                
+                div.innerHTML = `
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="elementos" value="${elemento.nombre}" id="elemento_${elemento.id}">
+                        <label class="form-check-label" for="elemento_${elemento.id}">
+                            ${elemento.nombre}
+                            <span class="badge ${badgeClass} ms-1">
+                                <i class="fas ${badgeIcon} me-1"></i>${badgeText}
+                            </span>
+                        </label>
+                    </div>
+                `;
+                elementosContainer.appendChild(div);
+            });
+            
+            console.log('✅ Elementos disponibles cargados correctamente');
+        })
+        .catch(error => {
+            console.error('❌ Error cargando elementos:', error);
+            elementosContainer.innerHTML = '<p class="text-muted">Error cargando elementos</p>';
+        });
+});
+
+// Agregar listener para el modal de elementos
+document.addEventListener('DOMContentLoaded', function() {
+    const elementosModal = document.getElementById('elementosModal');
+    if (elementosModal) {
+        elementosModal.addEventListener('show.bs.modal', function() {
+            console.log('🚀 Modal de elementos abierto');
+        });
+    }
+});
+</script>
+{% endblock %} 

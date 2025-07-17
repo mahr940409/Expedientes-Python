@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Asignar Dimensión/Planeta - {{ personaje.nombre }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h3 class="mb-0">
+                    <i class="fas fa-globe me-2"></i>
+                    Asignar Dimensión y Planeta
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-4 text-center">
+                        <img src="{{ url_for('static', filename=personaje.foto) }}" 
+                             alt="{{ personaje.nombre }}" 
+                             class="img-fluid rounded" 
+                             style="max-height: 200px;">
+                    </div>
+                    <div class="col-md-8">
+                        <h4>{{ personaje.nombre }}</h4>
+                        <p class="text-muted">
+                            <strong>Dimensión actual:</strong> 
+                            {% if personaje.dimension %}
+                                {{ personaje.dimension }}
+                            {% else %}
+                                <span class="text-warning">Sin asignar</span>
+                            {% endif %}
+                        </p>
+                        <p class="text-muted">
+                            <strong>Planeta actual:</strong> 
+                            {% if personaje.planeta %}
+                                {{ personaje.planeta }}
+                            {% else %}
+                                <span class="text-warning">Sin asignar</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="dimension" class="form-label">
+                                    <i class="fas fa-globe me-1"></i>Dimensión *
+                                </label>
+                                <select class="form-select" id="dimension" name="dimension" onchange="togglePlaneta()">
+                                    <option value="">Sin dimensión</option>
+                                    <option value="Universo" {% if personaje.dimension == 'Universo' %}selected{% endif %}>Universo</option>
+                                    <option value="Cielo" {% if personaje.dimension == 'Cielo' %}selected{% endif %}>Cielo</option>
+                                    <option value="Infierno" {% if personaje.dimension == 'Infierno' %}selected{% endif %}>Infierno</option>
+                                    <option value="Limbo" {% if personaje.dimension == 'Limbo' %}selected{% endif %}>Limbo</option>
+                                </select>
+                                <div class="form-text">Selecciona la dimensión de origen del personaje</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="planeta" class="form-label">
+                                    <i class="fas fa-planet-ringed me-1"></i>Planeta
+                                </label>
+                                <select class="form-select" id="planeta" name="planeta" disabled>
+                                    <option value="sin_planeta">Sin planeta</option>
+                                    {% for planeta in planetas %}
+                                    <option value="{{ planeta.nombre }}" 
+                                            {% if personaje.planeta == planeta.nombre %}selected{% endif %}
+                                            data-dimension="{{ planeta.dimension }}">
+                                        {{ planeta.nombre }} ({{ planeta.dimension }})
+                                    </option>
+                                    {% endfor %}
+                                    <option value="nuevo">+ Crear nuevo planeta</option>
+                                </select>
+                                <div class="form-text">Solo aparece para "Universo"</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Nota:</strong> Los personajes pueden funcionar perfectamente sin dimensión ni planeta asignados. 
+                        Puedes asignar estos valores en cualquier momento o cambiarlos cuando desees.
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('ver_personaje', personaje_id=personaje.id) }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Guardar Asignación
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function togglePlaneta() {
+        const dimension = document.getElementById('dimension').value;
+        const planetaSelect = document.getElementById('planeta');
+        const options = planetaSelect.querySelectorAll('option[data-dimension]');
+        const crearNuevo = planetaSelect.querySelector('option[value="nuevo"]');
+        
+        if (dimension === 'Universo') {
+            planetaSelect.disabled = false;
+            // Mostrar solo planetas del universo
+            options.forEach(option => {
+                if (option.dataset.dimension === 'Universo') {
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+            crearNuevo.style.display = '';
+        } else {
+            planetaSelect.value = 'sin_planeta';
+            planetaSelect.disabled = true;
+            options.forEach(option => {
+                option.style.display = 'none';
+            });
+            crearNuevo.style.display = 'none';
+        }
+    }
+
+    // Redirigir si selecciona "nuevo"
+    document.addEventListener('DOMContentLoaded', function() {
+        togglePlaneta();
+        document.getElementById('planeta').addEventListener('change', function() {
+            if (this.value === 'nuevo') {
+                window.location.href = '/planeta/nuevo';
+            }
+        });
+        document.getElementById('dimension').addEventListener('change', togglePlaneta);
+    });
+</script>
+{% endblock %} 

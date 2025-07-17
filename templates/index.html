@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}Inicio - Expediente Digital{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container text-center">
+        <h1 class="display-4 mb-3">
+            <i class="fas fa-user-shield me-3"></i>
+            {% if es_mis_personajes %}
+                Mis Personajes
+            {% else %}
+                Expediente Digital de Personajes
+            {% endif %}
+        </h1>
+        <p class="lead mb-4">
+            {% if es_mis_personajes %}
+                Gestiona y personaliza tus personajes creados
+            {% else %}
+                Los personajes más poderosos del sistema. ¡Inicia sesión para crear y gestionar tus propios personajes!
+            {% endif %}
+        </p>
+        {% if session.user_id %}
+            <div class="d-flex gap-3 justify-content-center">
+                <a href="{{ url_for('nuevo_personaje') }}" class="btn btn-light btn-lg">
+                    <i class="fas fa-plus me-2"></i>Crear Nuevo Personaje
+                </a>
+                <a href="{{ url_for('explorar_personajes') }}" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-search me-2"></i>Explorar Otros Personajes
+                </a>
+            </div>
+            
+            {% if personaje_activo %}
+                <div class="mt-3">
+                    <div class="alert alert-info d-flex align-items-center justify-content-between">
+                        <div>
+                            <i class="fas fa-star me-2"></i>
+                            <strong>Personaje Activo:</strong> {{ personaje_activo.nombre }}
+                        </div>
+                        <form action="{{ url_for('desactivar_personaje_activo') }}" method="POST" style="display: inline;">
+                            <button type="submit" class="btn btn-outline-info btn-sm">
+                                <i class="fas fa-times me-1"></i>Desactivar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="d-flex gap-3 justify-content-center">
+                <a href="{{ url_for('login') }}" class="btn btn-light btn-lg">
+                    <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                </a>
+                <a href="{{ url_for('register') }}" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-user-plus me-2"></i>Registrarse
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ total_personajes }}</div>
+        <div class="stat-label">Personajes Registrados</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ total_armas }}</div>
+        <div class="stat-label">Armas Totales</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ total_invocaciones }}</div>
+        <div class="stat-label">Invocaciones Totales</div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <h4 class="text-center mb-4">Personajes por Nivel</h4>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <div class="stat-card" style="min-width: 160px;">
+                <div class="stat-number">{{ total_nivel_d }}</div>
+                <div class="stat-label">Nivel D</div>
+            </div>
+            <div class="stat-card" style="min-width: 160px;">
+                <div class="stat-number">{{ total_nivel_c }}</div>
+                <div class="stat-label">Nivel C</div>
+            </div>
+            <div class="stat-card" style="min-width: 160px;">
+                <div class="stat-number">{{ total_nivel_b }}</div>
+                <div class="stat-label">Nivel B</div>
+            </div>
+            <div class="stat-card" style="min-width: 160px;">
+                <div class="stat-number">{{ total_nivel_a }}</div>
+                <div class="stat-label">Nivel A</div>
+            </div>
+            <div class="stat-card" style="min-width: 160px;">
+                <div class="stat-number">{{ total_nivel_s }}</div>
+                <div class="stat-label">Nivel S</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if personajes %}
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="fas fa-users me-2"></i>
+                {% if es_mis_personajes %}
+                    Mis Personajes
+                {% else %}
+                    <i class="fas fa-trophy me-2"></i>Top 3 del Ranking Global
+                {% endif %}
+            </h2>
+        </div>
+    </div>
+    
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for personaje in personajes %}
+        <div class="col">
+            <div class="card personaje-card h-100">
+                {% if personaje.foto %}
+                    <img src="{{ url_for('static', filename=personaje.foto) }}" class="card-img-top" alt="{{ personaje.nombre }}" style="height: 250px; object-fit: contain; background-color: #f8f9fa;">
+                {% else %}
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 250px;">
+                        <i class="fas fa-user fa-4x text-muted"></i>
+                    </div>
+                {% endif %}
+                
+                <div class="card-body">
+                    <h5 class="card-title">
+                        {{ personaje.nombre }}
+                        {% if not es_mis_personajes %}
+                            {% for ranking in personaje.rankings %}
+                                {% if ranking.posicion <= 3 %}
+                                    <span class="badge bg-warning text-dark ms-2">
+                                        <i class="fas fa-trophy me-1"></i>#{{ ranking.posicion }}
+                                    </span>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    </h5>
+                    <p class="card-text text-muted">
+                        <i class="fas fa-globe me-1"></i>{{ personaje.dimension }}
+                    </p>
+                                            {% if personaje.dimension == 'Universo' %}
+                    <p class="card-text text-muted">
+                        <i class="fas fa-planet-ringed me-1"></i>{{ personaje.planeta if personaje.planeta else 'N/A' }}
+                    </p>
+                    {% endif %}
+                    <p class="card-text">
+                        <i class="fas fa-birthday-cake me-1"></i>{{ personaje.edad }} años
+                    </p>
+                    <p class="card-text">
+                        <span class="badge bg-warning text-dark me-1">{{ personaje.rango }}</span>
+                        <span class="badge nivel-{{ personaje.nivel_auto|lower }}">{{ personaje.nivel_auto }}</span>
+                    </p>
+                    <p class="card-text">{{ personaje.descripcion[:100] }}{% if personaje.descripcion|length > 100 %}...{% endif %}</p>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            {% if personaje.armas_nuevas %}
+                                <span class="badge bg-primary me-1">
+                                    <i class="fas fa-sword me-1"></i>{{ personaje.armas_nuevas|length }} Armas
+                                </span>
+                            {% endif %}
+                            {% if personaje.invocaciones_nuevas %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-magic me-1"></i>{{ personaje.invocaciones_nuevas|length }} Invocaciones
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-transparent border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('ver_personaje', personaje_id=personaje.id) }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-eye me-1"></i>Ver Detalles
+                        </a>
+                        
+                        {% if session.user_id and personaje.creador_id == session.user_id %}
+                            <div class="d-flex gap-1">
+                                {% if personaje_activo and personaje_activo.id == personaje.id %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-star me-1"></i>Activo
+                                    </span>
+                                {% else %}
+                                    <form action="{{ url_for('seleccionar_personaje_activo', personaje_id=personaje.id) }}" method="POST" style="display: inline;">
+                                        <button type="submit" class="btn btn-outline-success btn-sm" title="Seleccionar como activo">
+                                            <i class="fas fa-star"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                                
+                                {% if session.es_admin or personaje.creador_id == session.user_id %}
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('editar_personaje', personaje_id=personaje.id) }}" class="btn btn-outline-secondary btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ personaje.id }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal de confirmación de eliminación -->
+        <div class="modal fade" id="deleteModal{{ personaje.id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirmar Eliminación</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>¿Estás seguro de que deseas eliminar al personaje <strong>{{ personaje.nombre }}</strong>?</p>
+                        <p class="text-danger"><small>Esta acción no se puede deshacer.</small></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <form action="{{ url_for('eliminar_personaje', personaje_id=personaje.id) }}" method="POST" style="display: inline;">
+                            <button type="submit" class="btn btn-danger">Eliminar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <div class="card">
+            <div class="card-body py-5">
+                <i class="fas fa-users fa-5x text-muted mb-4"></i>
+                <h3 class="text-muted">No hay personajes registrados</h3>
+                <p class="text-muted mb-4">Comienza creando tu primer personaje para el expediente digital</p>
+                <a href="{{ url_for('nuevo_personaje') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus me-2"></i>Crear Primer Personaje
+                </a>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %} 

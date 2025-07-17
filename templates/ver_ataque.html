@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}{{ ataque.nombre }} - Detalles{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('ataques') }}">Ataques</a></li>
+                    <li class="breadcrumb-item active">{{ ataque.nombre }}</li>
+                </ol>
+            </nav>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    {% if ataque.imagen %}
+                    <img src="{{ url_for('static', filename=ataque.imagen) }}" 
+                         class="img-fluid rounded shadow" alt="{{ ataque.nombre }}">
+                    {% else %}
+                    <div class="bg-light rounded shadow d-flex align-items-center justify-content-center" 
+                         style="height: 400px;">
+                        <i class="fas fa-fist-raised fa-5x text-muted"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="col-md-6">
+                    <h1 class="text-primary mb-3">
+                        {{ ataque.nombre }}
+                        {% if ataque.es_unico %}
+                        <span class="badge bg-danger ms-2 fs-6">
+                            <i class="fas fa-star me-1"></i>Único
+                        </span>
+                        {% endif %}
+                    </h1>
+                    <p class="text-muted mb-4">{{ ataque.descripcion }}</p>
+                    
+                    <div class="row mb-4">
+                        <div class="col-4">
+                            <div class="card bg-success text-white text-center">
+                                <div class="card-body">
+                                    <i class="fas fa-bolt fa-2x mb-2"></i>
+                                    <h3 class="mb-0">{{ ataque.poder }}</h3>
+                                    <small>Poder Adicional</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="card bg-warning text-dark text-center">
+                                <div class="card-body">
+                                    <i class="fas fa-coins fa-2x mb-2"></i>
+                                    <h3 class="mb-0">{{ ataque.precio }}</h3>
+                                    <small>Rastamonios</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            {% if ataque.es_unico %}
+                                <div class="card bg-danger text-white text-center">
+                                    <div class="card-body">
+                                        <i class="fas fa-star fa-2x mb-2"></i>
+                                        <h3 class="mb-0">1</h3>
+                                        <small>Único</small>
+                                    </div>
+                                </div>
+                            {% elif ataque.stock == -1 %}
+                                <div class="card bg-info text-white text-center">
+                                    <div class="card-body">
+                                        <i class="fas fa-infinity fa-2x mb-2"></i>
+                                        <h3 class="mb-0">∞</h3>
+                                        <small>Stock Ilimitado</small>
+                                    </div>
+                                </div>
+                            {% elif ataque.stock > 0 %}
+                                <div class="card bg-success text-white text-center">
+                                    <div class="card-body">
+                                        <i class="fas fa-boxes fa-2x mb-2"></i>
+                                        <h3 class="mb-0">{{ ataque.stock }}</h3>
+                                        <small>Disponibles</small>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="card bg-danger text-white text-center">
+                                    <div class="card-body">
+                                        <i class="fas fa-times fa-2x mb-2"></i>
+                                        <h3 class="mb-0">0</h3>
+                                        <small>Agotado</small>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if personajes %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-shopping-cart"></i>
+                                Comprar Ataque
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" id="formComprar">
+                                <div class="mb-3">
+                                    <label for="personaje_id" class="form-label">Seleccionar Personaje:</label>
+                                    <select class="form-select" name="personaje_id" id="personaje_id" required>
+                                        <option value="">-- Selecciona un personaje --</option>
+                                        {% for personaje in personajes %}
+                                        <option value="{{ personaje.id }}" 
+                                                data-rastamonios="{{ personaje.rastamonios }}"
+                                                data-ataques="{{ personaje.ataques_comprados|length }}">
+                                            {{ personaje.nombre }} 
+                                            ({{ personaje.rastamonios }} rastamonios, 
+                                             {{ personaje.ataques_comprados|length }}/50 ataques)
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div id="infoPersonaje" class="alert alert-info d-none">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <strong>Rastamonios:</strong> <span id="rastamonios"></span>
+                                        </div>
+                                        <div class="col-6">
+                                            <strong>Ataques:</strong> <span id="ataques"></span>/50
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <strong>Precio:</strong> {{ ataque.precio }} rastamonios
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-success w-100" id="btnComprar" disabled>
+                                    <i class="fas fa-shopping-cart"></i> Comprar Ataque
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>No tienes personajes</strong><br>
+                        Necesitas crear un personaje antes de poder comprar ataques.
+                        <a href="{{ url_for('nuevo_personaje') }}" class="btn btn-primary btn-sm ms-2">
+                            Crear Personaje
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectPersonaje = document.getElementById('personaje_id');
+    const infoPersonaje = document.getElementById('infoPersonaje');
+    const btnComprar = document.getElementById('btnComprar');
+    const formComprar = document.getElementById('formComprar');
+    
+    selectPersonaje.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        if (this.value) {
+            const rastamonios = parseInt(selectedOption.dataset.rastamonios);
+            const ataques = parseInt(selectedOption.dataset.ataques);
+            const precio = {{ ataque.precio }};
+            const stock = {{ ataque.stock }};
+            const esUnico = {{ 'true' if ataque.es_unico else 'false' }};
+            document.getElementById('rastamonios').textContent = rastamonios;
+            document.getElementById('ataques').textContent = ataques;
+            infoPersonaje.classList.remove('d-none');
+            // Verificar si puede comprar
+            const puedeComprar = rastamonios >= precio && ataques < 50 && (esUnico || stock == -1 || stock > 0);
+            btnComprar.disabled = !puedeComprar;
+            if (!puedeComprar) {
+                if (rastamonios < precio) {
+                    btnComprar.textContent = 'Rastamonios insuficientes';
+                } else if (ataques >= 50) {
+                    btnComprar.textContent = 'Límite de ataques alcanzado';
+                } else if (stock == 0) {
+                    btnComprar.textContent = 'Ataque agotado';
+                }
+            } else {
+                btnComprar.innerHTML = '<i class="fas fa-shopping-cart"></i> Comprar Ataque';
+            }
+        } else {
+            infoPersonaje.classList.add('d-none');
+            btnComprar.disabled = true;
+        }
+    });
+    formComprar.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const personajeId = selectPersonaje.value;
+        if (!personajeId) {
+            alert('Debes seleccionar un personaje');
+            return;
+        }
+        const selectedOption = selectPersonaje.options[selectPersonaje.selectedIndex];
+        const rastamonios = parseInt(selectedOption.dataset.rastamonios);
+        const ataques = parseInt(selectedOption.dataset.ataques);
+        const precio = {{ ataque.precio }};
+        const stock = {{ ataque.stock }};
+        const esUnico = {{ 'true' if ataque.es_unico else 'false' }};
+        if (rastamonios < precio) {
+            alert('No tienes suficientes rastamonios para comprar este ataque');
+            return;
+        }
+        if (ataques >= 50) {
+            alert('Este personaje ya tiene el límite máximo de 50 ataques');
+            return;
+        }
+        if (!esUnico && stock == 0) {
+            alert('Este ataque está agotado');
+            return;
+        }
+        // Construir la URL correcta
+        const url = "{{ url_for('comprar_ataque', ataque_id=ataque.id, personaje_id=0) }}".replace('/0', '/' + personajeId);
+        formComprar.action = url;
+        formComprar.submit();
+    });
+});
+</script>
+{% endblock %} 

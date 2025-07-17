@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Editar {{ ataque.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin_ataques') }}">Administrar Ataques</a></li>
+                    <li class="breadcrumb-item active">Editar {{ ataque.nombre }}</li>
+                </ol>
+            </nav>
+            
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card shadow">
+                        <div class="card-header bg-primary text-white">
+                            <h3 class="mb-0">
+                                <i class="fas fa-edit"></i>
+                                Editar Ataque: {{ ataque.nombre }}
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" enctype="multipart/form-data">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="nombre" class="form-label">Nombre del Ataque *</label>
+                                            <input type="text" class="form-control" id="nombre" name="nombre" 
+                                                   value="{{ ataque.nombre }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="poder" class="form-label">Poder Adicional *</label>
+                                            <input type="number" class="form-control" id="poder" name="poder" 
+                                                   value="{{ ataque.poder }}" min="1" required>
+                                            <div class="form-text">Poder que sumará al personaje que lo compre</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="descripcion" class="form-label">Descripción *</label>
+                                    <textarea class="form-control" id="descripcion" name="descripcion" rows="4" required>{{ ataque.descripcion }}</textarea>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="precio" class="form-label">Precio en Rastamonios *</label>
+                                            <input type="number" class="form-control" id="precio" name="precio" 
+                                                   value="{{ ataque.precio }}" min="1" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="stock" class="form-label">Stock *</label>
+                                            <input type="number" class="form-control" id="stock" name="stock" 
+                                                   value="{{ ataque.stock }}" min="-1" required>
+                                            <div class="form-text">-1 = Ilimitado, 0+ = Cantidad disponible</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="imagen" class="form-label">Nueva Imagen (Opcional)</label>
+                                            <input type="file" class="form-control" id="imagen" name="imagen" accept="image/*">
+                                            <div class="form-text">Formatos permitidos: PNG, JPG, JPEG, GIF, WEBP</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {% if ataque.imagen %}
+                                <div class="mb-3">
+                                    <label class="form-label">Imagen Actual</label>
+                                    <div>
+                                        <img src="{{ url_for('static', filename=ataque.imagen) }}" 
+                                             alt="{{ ataque.nombre }}" style="max-width: 200px; max-height: 200px;" 
+                                             class="img-thumbnail">
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="es_unico" name="es_unico" 
+                                               {% if ataque.es_unico %}checked{% endif %}>
+                                        <label class="form-check-label" for="es_unico">
+                                            <i class="fas fa-star text-warning"></i>
+                                            <strong>Ataque Único</strong>
+                                        </label>
+                                        <div class="form-text">
+                                            Los ataques únicos se ponen en venta cuando se venden. 
+                                            Los ataques no únicos se venden automáticamente al 75% del precio de compra.
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="clan_requerido" class="form-label">Clan Requerido</label>
+                                    <select class="form-select" id="clan_requerido" name="clan_requerido">
+                                        <option value="">Sin restricción de clan</option>
+                                        {% for clan in clanes %}
+                                        <option value="{{ clan.id }}" {% if ataque.clan_requerido == clan.id %}selected{% endif %}>{{ clan.nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="form-text">
+                                        Si seleccionas un clan, solo los miembros de ese clan podrán comprar este ataque.
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between">
+                                    <a href="{{ url_for('admin_ataques') }}" class="btn btn-secondary">
+                                        <i class="fas fa-arrow-left"></i> Cancelar
+                                    </a>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-save"></i> Guardar Cambios
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

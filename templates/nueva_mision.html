@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Crear Nueva Misión - Expediente Digital{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container text-center">
+        <h1 class="display-4 mb-3">
+            <i class="fas fa-plus me-3"></i>
+            Crear Nueva Misión
+        </h1>
+        <p class="lead mb-4">Define una nueva misión para los usuarios</p>
+        <a href="{{ url_for('admin_misiones') }}" class="btn btn-outline-light btn-lg">
+            <i class="fas fa-arrow-left me-2"></i>Volver a Misiones
+        </a>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        Información de la Misión
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="titulo" class="form-label">
+                                <i class="fas fa-heading me-1"></i>Título de la Misión
+                            </label>
+                            <input type="text" class="form-control" id="titulo" name="titulo" 
+                                   placeholder="Ej: Derrotar al Dragón de las Sombras" required>
+                            <div class="form-text">Un título descriptivo y atractivo para la misión</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label">
+                                <i class="fas fa-align-left me-1"></i>Descripción
+                            </label>
+                            <textarea class="form-control" id="descripcion" name="descripcion" rows="4" 
+                                      placeholder="Describe los detalles de la misión, objetivos, contexto, etc." required></textarea>
+                            <div class="form-text">Explica qué debe hacer el personaje para completar la misión</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="imagen" class="form-label">
+                                <i class="fas fa-image me-1"></i>Imagen de la Misión (Opcional)
+                            </label>
+                            <input type="file" class="form-control" id="imagen" name="imagen" 
+                                   accept="image/png,image/jpg,image/jpeg,image/gif,image/webp">
+                            <div class="form-text">Agrega una imagen representativa para la misión. Formatos: PNG, JPG, JPEG, GIF, WEBP</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="poder_minimo" class="form-label">
+                                        <i class="fas fa-shield-alt me-1"></i>Poder Mínimo Requerido
+                                    </label>
+                                    <input type="number" class="form-control" id="poder_minimo" name="poder_minimo" 
+                                           min="1" value="100" required>
+                                    <div class="form-text">Poder mínimo que debe tener el personaje para aceptar la misión</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="duracion_segundos" class="form-label">
+                                        <i class="fas fa-clock me-1"></i>Duración (segundos)
+                                    </label>
+                                    <input type="number" class="form-control" id="duracion_segundos" name="duracion_segundos" 
+                                           min="1" max="86400" value="1800" required>
+                                    <div class="form-text">Tiempo límite para completar la misión (máximo 24 horas = 86,400 segundos)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="recompensa_rastamonios" class="form-label">
+                                        <i class="fas fa-coins me-1"></i>Recompensa en Rastamonios
+                                    </label>
+                                    <input type="number" class="form-control" id="recompensa_rastamonios" name="recompensa_rastamonios" 
+                                           min="1" value="1000" required>
+                                    <div class="form-text">Cantidad de rastamonios que ganará el personaje</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="recompensa_poder" class="form-label">
+                                        <i class="fas fa-fire me-1"></i>Recompensa de Poder
+                                    </label>
+                                    <input type="number" class="form-control" id="recompensa_poder" name="recompensa_poder" 
+                                           min="0" value="50" required>
+                                    <div class="form-text">Poder adicional que ganará el personaje (opcional)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle me-1"></i>Consejos para crear misiones:</h6>
+                            <ul class="mb-0">
+                                <li><strong>Poder mínimo:</strong> Considera el nivel de los personajes existentes</li>
+                                <li><strong>Duración:</strong> Misiones cortas (300-900 seg) para principiantes, largas (1800-3600 seg) para avanzados</li>
+                                <li><strong>Recompensas:</strong> Balancea la dificultad con las recompensas</li>
+                                <li><strong>Descripción:</strong> Sé creativo y descriptivo para hacer la misión atractiva</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('admin_misiones') }}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-times me-1"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Crear Misión
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

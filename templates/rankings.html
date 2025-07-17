@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Rankings Globales{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="mb-0">
+                    <i class="fas fa-trophy text-warning me-2"></i>
+                    Ranking Global de Personajes
+                </h1>
+                {% if session.es_admin %}
+                <a href="{{ url_for('actualizar_rankings_manual') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-sync-alt me-1"></i>Actualizar Rankings
+                </a>
+                {% endif %}
+            </div>
+            
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>¿Cómo se calcula el poder?</strong><br>
+                • <strong>Personaje:</strong> D(100) | C(250) | B(500) | A(1000) | S(2000)<br>
+                • <strong>Armas:</strong> 50% del poder del arma<br>
+                • <strong>Invocaciones:</strong> 80% del poder de la invocación<br>
+                • <strong>Elementos:</strong> 50 puntos por elemento
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            {% if rankings %}
+                {% for ranking in rankings %}
+                <div class="card mb-3 ranking-card shadow-sm">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="ranking-position me-3 text-center" style="min-width: 60px;">
+                            {% if ranking.posicion == 1 %}
+                                <span class="badge bg-warning text-dark fs-4">🥇</span>
+                                <div class="small text-muted">1º</div>
+                            {% elif ranking.posicion == 2 %}
+                                <span class="badge bg-secondary fs-4">🥈</span>
+                                <div class="small text-muted">2º</div>
+                            {% elif ranking.posicion == 3 %}
+                                <span class="badge bg-warning text-dark fs-4">🥉</span>
+                                <div class="small text-muted">3º</div>
+                            {% else %}
+                                <span class="badge bg-primary fs-5">#{{ ranking.posicion }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="flex-grow-1">
+                            <h5 class="card-title mb-1">
+                                <a href="{{ url_for('ver_personaje', personaje_id=ranking.personaje.id) }}" 
+                                   class="text-decoration-none">
+                                    {{ ranking.personaje.nombre }}
+                                </a>
+                            </h5>
+                            <p class="card-text text-muted mb-1">
+                                <span class="badge nivel-{{ ranking.personaje.nivel_auto|lower }} me-1">{{ ranking.personaje.nivel_auto }}</span>
+                                <span class="badge bg-info me-1">{{ ranking.personaje.dimension }}</span>
+                                {% if ranking.personaje.planeta %}
+                                    <span class="badge bg-success">{{ ranking.personaje.planeta }}</span>
+                                {% endif %}
+                            </p>
+                            <div class="small text-muted">
+                                <i class="fas fa-sword me-1"></i>{{ ranking.personaje.armas_nuevas|length }} armas
+                                <i class="fas fa-magic ms-2 me-1"></i>{{ ranking.personaje.invocaciones_nuevas|length }} invocaciones
+                            </div>
+                        </div>
+                        
+                        <div class="text-end">
+                            <div class="power-score">
+                                <i class="fas fa-bolt text-warning"></i>
+                                <span class="fs-4 fw-bold text-primary">{{ ranking.poder_total }}</span>
+                            </div>
+                            <small class="text-muted">Poder Total</small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                {% if rankings|length >= 50 %}
+                <div class="text-center mt-4">
+                    <p class="text-muted">Mostrando los 50 personajes más poderosos</p>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-trophy fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">No hay rankings disponibles</h4>
+                    <p class="text-muted">Los rankings se generan automáticamente cuando hay personajes en el sistema.</p>
+                    <a href="{{ url_for('index') }}" class="btn btn-primary">
+                        <i class="fas fa-home me-1"></i>Ir al Inicio
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.ranking-card {
+    transition: transform 0.2s ease-in-out;
+    border-left: 4px solid #007bff;
+}
+
+.ranking-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
+}
+
+.ranking-card:nth-child(1) {
+    border-left-color: #ffc107;
+}
+
+.ranking-card:nth-child(2) {
+    border-left-color: #6c757d;
+}
+
+.ranking-card:nth-child(3) {
+    border-left-color: #fd7e14;
+}
+
+.power-score {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.nivel-d { background-color: #6c757d; }
+.nivel-c { background-color: #17a2b8; }
+.nivel-b { background-color: #28a745; }
+.nivel-a { background-color: #ffc107; color: #212529; }
+.nivel-s { background-color: #dc3545; }
+</style>
+{% endblock %} 

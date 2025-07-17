@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Nueva Solicitud de Invocación{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-magic"></i> Nueva Solicitud de Invocación
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="personaje_id" class="form-label">Personaje *</label>
+                                    <select class="form-select" name="personaje_id" required>
+                                        <option value="">Selecciona un personaje</option>
+                                        {% for personaje in personajes %}
+                                            <option value="{{ personaje.id }}" {% if request.args.get('personaje_id')|int == personaje.id %}selected{% endif %}>
+                                                {{ personaje.nombre }} ({{ personaje.dimension }})
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="nombre" class="form-label">Nombre de la Invocación *</label>
+                                    <input type="text" class="form-control" name="nombre" required 
+                                           placeholder="Ej: Dragón de Fuego">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="poder" class="form-label">Poder *</label>
+                                    <input type="number" class="form-control" name="poder" required 
+                                           min="1" max="15000" placeholder="Ej: 1500"
+                                           title="El poder que sumará esta invocación al personaje">
+                                    <div class="form-text">El poder que sumará esta invocación al personaje (1-15000)</div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="descripcion" class="form-label">Descripción *</label>
+                                    <textarea class="form-control" name="descripcion" rows="4" required
+                                              placeholder="Describe las características y habilidades de la invocación..."></textarea>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="imagen" class="form-label">Imagen</label>
+                                    <input type="file" class="form-control" name="imagen" accept="image/*">
+                                    <div class="form-text">Formatos permitidos: JPG, PNG, GIF. Máximo 5MB.</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="motivo" class="form-label">Motivo de la Solicitud</label>
+                                    <textarea class="form-control" name="motivo" rows="3"
+                                              placeholder="Explica por qué necesitas esta invocación para tu personaje..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Información importante:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>Las solicitudes de invocaciones deben ser aprobadas por un administrador</li>
+                                <li>Una vez aprobada, la invocación se agregará automáticamente a tu personaje</li>
+                                <li>Recibirás una notificación cuando se revise tu solicitud</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('listar_solicitudes_invocaciones') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Volver
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Enviar Solicitud
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

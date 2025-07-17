@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Nuevo Personaje - Expediente Digital{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Crear Nuevo Personaje
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nombre" class="form-label">
+                                    <i class="fas fa-user me-1"></i>Nombre del Personaje *
+                                </label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edad" class="form-label">
+                                    <i class="fas fa-birthday-cake me-1"></i>Edad *
+                                </label>
+                                <input type="number" class="form-control" id="edad" name="edad" min="1" max="999" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="rango" class="form-label">
+                                    <i class="fas fa-crown me-1"></i>Rango *
+                                </label>
+                                <input type="text" class="form-control" id="rango" name="rango" required placeholder="Ej: Guerrero, Mago, Rey, etc.">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="foto" class="form-label">
+                                    <i class="fas fa-camera me-1"></i>Fotografía *
+                                </label>
+                                <input type="file" class="form-control" id="foto" name="foto" accept="image/*" required>
+                                <div class="form-text">Formatos permitidos: PNG, JPG, JPEG, GIF, WEBP</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="descripcion" class="form-label">
+                            <i class="fas fa-align-left me-1"></i>Descripción General *
+                        </label>
+                        <textarea class="form-control" id="descripcion" name="descripcion" rows="4" required placeholder="Describe las características, personalidad, historia y habilidades del personaje..."></textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Crear Personaje
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Información Adicional
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-sword me-1"></i>Armas</h6>
+                        <p class="text-muted">Podrás agregar armas después de crear el personaje, incluyendo:</p>
+                        <ul class="text-muted">
+                            <li>Imagen representativa</li>
+                            <li>Descripción de funciones</li>
+                            <li>Rango asignado</li>
+                            <li>Nivel de poder (D, C, B, A, S)</li>
+                        </ul>
+                    </div>
+                                            <div class="col-md-6">
+                            <h6><i class="fas fa-magic me-1"></i>Invocaciones</h6>
+                            <p class="text-muted">Podrás agregar invocaciones después de crear el personaje, incluyendo:</p>
+                            <ul class="text-muted">
+                                <li>Imagen de la invocación</li>
+                                <li>Descripción detallada</li>
+                                <li>Rango otorgado</li>
+                                <li>Nivel (D, C, B, A, S)</li>
+                                <li>Elementos utilizados</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6><i class="fas fa-info-circle me-1"></i>Nota sobre Dimensión y Planeta</h6>
+                            <p class="text-muted">Tu personaje se creará sin dimensión ni planeta asignados. Podrás asignarle una dimensión y planeta más tarde desde su perfil, incluyendo la opción de solicitar acceso a planetas restringidos.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Preview de imagen
+    const fotoInput = document.getElementById('foto');
+    if (fotoInput) {
+        fotoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Crear preview si no existe
+                    let preview = document.getElementById('image-preview');
+                    if (!preview) {
+                        preview = document.createElement('img');
+                        preview.id = 'image-preview';
+                        preview.className = 'img-thumbnail mt-2';
+                        preview.style.maxHeight = '200px';
+                        const fotoParent = document.getElementById('foto').parentNode;
+                        if (fotoParent) {
+                            fotoParent.appendChild(preview);
+                        }
+                    }
+                    preview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+</script>
+{% endblock %} 

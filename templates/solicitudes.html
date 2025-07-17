@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Solicitudes de Elementos{% endblock %}
+
+{% block content %}
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-clipboard-list me-2"></i>
+                            {% if session.es_admin %}
+                                Todas las Solicitudes de Elementos
+                            {% else %}
+                                Mis Solicitudes de Elementos
+                            {% endif %}
+                        </h4>
+                        <a href="{{ url_for('nueva_solicitud') }}" class="btn btn-light">
+                            <i class="fas fa-plus me-1"></i>Nueva Solicitud
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        {% if solicitudes %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Usuario</th>
+                                            <th>Personaje</th>
+                                            <th>Elemento</th>
+                                            <th>Motivo</th>
+                                            <th>Estado</th>
+                                            <th>Fecha</th>
+                                            {% if session.es_admin %}
+                                                <th>Acciones</th>
+                                            {% endif %}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for solicitud in solicitudes %}
+                                            <tr>
+                                                <td>
+                                                    <i class="fas fa-user me-1"></i>
+                                                    {{ solicitud.usuario.username }}
+                                                </td>
+                                                <td>
+                                                    <i class="fas fa-user-circle me-1"></i>
+                                                    {{ solicitud.personaje.nombre }}
+                                                </td>
+                                                <td>
+                                                    <i class="fas fa-fire me-1"></i>
+                                                    {{ solicitud.elemento.nombre }}
+                                                </td>
+                                                <td>
+                                                    <small class="text-muted">{{ solicitud.motivo[:50] }}{% if solicitud.motivo|length > 50 %}...{% endif %}</small>
+                                                </td>
+                                                <td>
+                                                    {% if solicitud.estado == 'pendiente' %}
+                                                        <span class="badge bg-warning status-badge">
+                                                            <i class="fas fa-clock me-1"></i>Pendiente
+                                                        </span>
+                                                    {% elif solicitud.estado == 'aprobada' %}
+                                                        <span class="badge bg-success status-badge">
+                                                            <i class="fas fa-check me-1"></i>Aprobada
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger status-badge">
+                                                            <i class="fas fa-times me-1"></i>Rechazada
+                                                        </span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <small>{{ solicitud.fecha_solicitud.strftime('%d/%m/%Y %H:%M') }}</small>
+                                                </td>
+                                                {% if session.es_admin and solicitud.estado == 'pendiente' %}
+                                                    <td>
+                                                        <div class="btn-group" role="group">
+                                                            <button type="button" class="btn btn-success btn-sm" 
+                                                                    data-bs-toggle="modal" 
+                                                                    data-bs-target="#aprobarModal{{ solicitud.id }}">
+                                                                <i class="fas fa-check"></i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-danger btn-sm" 
+                                                                    data-bs-toggle="modal" 
+                                                                    data-bs-target="#rechazarModal{{ solicitud.id }}">
+                                                                <i class="fas fa-times"></i>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                {% elif session.es_admin %}
+                                                    <td>
+                                                        <small class="text-muted">
+                                                            {% if solicitud.respuesta_admin %}
+                                                                {{ solicitud.respuesta_admin[:30] }}...
+                                                            {% endif %}
+                                                        </small>
+                                                    </td>
+                                                {% endif %}
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No hay solicitudes</h5>
+                                <p class="text-muted">
+                                    {% if session.es_admin %}
+                                        No hay solicitudes pendientes de revisión.
+                                    {% else %}
+                                        No has enviado ninguna solicitud de elemento.
+                                    {% endif %}
+                                </p>
+                                <a href="{{ url_for('nueva_solicitud') }}" class="btn btn-primary">
+                                    <i class="fas fa-plus me-1"></i>Crear Primera Solicitud
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modales para aprobar/rechazar solicitudes (solo para admin) -->
+    {% if session.es_admin %}
+        {% for solicitud in solicitudes %}
+            {% if solicitud.estado == 'pendiente' %}
+                <!-- Modal Aprobar -->
+                <div class="modal fade" id="aprobarModal{{ solicitud.id }}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-check text-success me-2"></i>Aprobar Solicitud
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <form action="{{ url_for('aprobar_solicitud', solicitud_id=solicitud.id) }}" method="POST">
+                                <div class="modal-body">
+                                    <p><strong>Usuario:</strong> {{ solicitud.usuario.username }}</p>
+                                    <p><strong>Personaje:</strong> {{ solicitud.personaje.nombre }}</p>
+                                    <p><strong>Elemento:</strong> {{ solicitud.elemento.nombre }}</p>
+                                    <p><strong>Motivo:</strong> {{ solicitud.motivo }}</p>
+                                    <div class="mb-3">
+                                        <label for="respuesta{{ solicitud.id }}" class="form-label">Respuesta (opcional):</label>
+                                        <textarea class="form-control" id="respuesta{{ solicitud.id }}" name="respuesta" rows="3" placeholder="Mensaje para el usuario..."></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-check me-1"></i>Aprobar
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Rechazar -->
+                <div class="modal fade" id="rechazarModal{{ solicitud.id }}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-times text-danger me-2"></i>Rechazar Solicitud
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <form action="{{ url_for('rechazar_solicitud', solicitud_id=solicitud.id) }}" method="POST">
+                                <div class="modal-body">
+                                    <p><strong>Usuario:</strong> {{ solicitud.usuario.username }}</p>
+                                    <p><strong>Personaje:</strong> {{ solicitud.personaje.nombre }}</p>
+                                    <p><strong>Elemento:</strong> {{ solicitud.elemento.nombre }}</p>
+                                    <p><strong>Motivo:</strong> {{ solicitud.motivo }}</p>
+                                    <div class="mb-3">
+                                        <label for="respuesta{{ solicitud.id }}" class="form-label">Motivo del rechazo:</label>
+                                        <textarea class="form-control" id="respuesta{{ solicitud.id }}" name="respuesta" rows="3" placeholder="Explica por qué rechazas la solicitud..." required></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="fas fa-times me-1"></i>Rechazar
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+{% endblock %} 

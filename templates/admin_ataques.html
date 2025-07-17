@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Administrar Ataques{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="mb-0">
+                    <i class="fas fa-cog text-primary"></i>
+                    Administrar Ataques
+                </h1>
+                <a href="{{ url_for('nuevo_ataque') }}" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Nuevo Ataque
+                </a>
+            </div>
+            
+            {% if ataques %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Imagen</th>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Poder</th>
+                            <th>Precio</th>
+                            <th>Stock</th>
+                            <th>Único</th>
+                            <th>Clan</th>
+                            <th>Estado</th>
+                            <th>Fecha</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ataque in ataques %}
+                        <tr>
+                            <td>{{ ataque.id }}</td>
+                            <td>
+                                {% if ataque.imagen %}
+                                <img src="{{ url_for('static', filename=ataque.imagen) }}" 
+                                     alt="{{ ataque.nombre }}" style="width: 50px; height: 50px; object-fit: cover;">
+                                {% else %}
+                                <i class="fas fa-fist-raised fa-2x text-muted"></i>
+                                {% endif %}
+                            </td>
+                            <td><strong>{{ ataque.nombre }}</strong></td>
+                            <td>{{ ataque.descripcion[:50] }}{% if ataque.descripcion|length > 50 %}...{% endif %}</td>
+                            <td>
+                                <span class="badge bg-success">{{ ataque.poder }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-warning text-dark">{{ ataque.precio }}</span>
+                            </td>
+                            <td>
+                                {% if ataque.es_unico %}
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-star"></i> Único
+                                    </span>
+                                {% elif ataque.stock == -1 %}
+                                    <span class="badge bg-info">Ilimitado</span>
+                                {% elif ataque.stock > 0 %}
+                                    <span class="badge bg-success">{{ ataque.stock }}</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Agotado</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if ataque.es_unico %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-star"></i> Único
+                                </span>
+                                {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-copy"></i> Múltiple
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if ataque.clan_requerido %}
+                                <span class="badge bg-purple">
+                                    <i class="fas fa-users"></i> {{ ataque.clan_exclusivo.nombre if ataque.clan_exclusivo else 'Clan' }}
+                                </span>
+                                {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-globe"></i> Público
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if ataque.disponible %}
+                                <span class="badge bg-success">Disponible</span>
+                                {% else %}
+                                <span class="badge bg-danger">No Disponible</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if ataque.fecha_creacion %}
+                                    {{ ataque.fecha_creacion.strftime('%d/%m/%Y') }}
+                                {% else %}
+                                    <span class="text-muted">Sin fecha</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('editar_ataque', ataque_id=ataque.id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    
+                                    <form method="POST" action="{{ url_for('toggle_ataque', ataque_id=ataque.id) }}" 
+                                          class="d-inline" onsubmit="return confirm('¿{{ 'Desactivar' if ataque.disponible else 'Activar' }} este ataque?')">
+                                        <button type="submit" class="btn btn-sm btn-outline-{{ 'warning' if ataque.disponible else 'success' }}">
+                                            <i class="fas fa-{{ 'times' if ataque.disponible else 'check' }}"></i>
+                                        </button>
+                                    </form>
+                                    
+                                    <form method="POST" action="{{ url_for('eliminar_ataque', ataque_id=ataque.id) }}" 
+                                          class="d-inline" onsubmit="return confirm('¿Eliminar este ataque? Esta acción no se puede deshacer.')">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-fist-raised fa-4x text-muted mb-3"></i>
+                <h3 class="text-muted">No hay ataques creados</h3>
+                <p class="text-muted">Crea el primer ataque para que los usuarios puedan comprarlo.</p>
+                <a href="{{ url_for('nuevo_ataque') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Crear Primer Ataque
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

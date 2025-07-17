@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Administrar Tienda{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-store"></i> Administrar Tienda</h2>
+        <a href="{{ url_for('nuevo_item_tienda') }}" class="btn btn-success">
+            <i class="fas fa-plus me-2"></i>Nuevo Item
+        </a>
+    </div>
+
+    {% if items %}
+    <div class="row">
+        {% for item in items %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                {% if item.imagen %}
+                <img src="{{ url_for('static', filename=item.imagen) }}" class="card-img-top" alt="{{ item.nombre }}" style="height: 200px; object-fit: contain; background-color: #f8f9fa;">
+                {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="fas fa-image fa-3x text-muted"></i>
+                </div>
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ item.nombre }}</h5>
+                    <p class="card-text">{{ item.descripcion }}</p>
+                    <div class="mb-2">
+                        <span class="badge bg-warning text-dark me-2">
+                            <i class="fas fa-coins"></i> {{ item.precio }} rastamonios
+                        </span>
+                        {% if item.es_unico %}
+                        <span class="badge bg-danger">
+                            <i class="fas fa-star"></i> Único
+                        </span>
+                        {% else %}
+                            {% if item.stock >= 0 %}
+                                {% if item.stock > 0 %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-boxes"></i> Stock: {{ item.stock }}
+                                </span>
+                                {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-times-circle"></i> Agotado
+                                </span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-primary">
+                                    <i class="fas fa-infinity"></i> Ilimitado
+                                </span>
+                            {% endif %}
+                        {% endif %}
+                        {% if item.poder_adicional > 0 %}
+                        <span class="badge bg-info">
+                            <i class="fas fa-fist-raised"></i> +{{ item.poder_adicional }} poder
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="mb-2">
+                        {% if item.disponible %}
+                        <span class="badge bg-success">Disponible</span>
+                        {% else %}
+                        <span class="badge bg-secondary">No disponible</span>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('editar_item_tienda', item_id=item.id) }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                        <form method="POST" action="{{ url_for('eliminar_item_tienda', item_id=item.id) }}" class="d-inline" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este item?')">
+                            <button type="submit" class="btn btn-danger btn-sm">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <div class="card-footer text-muted">
+                    <small>Creado: {{ item.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        No hay items en la tienda. <a href="{{ url_for('nuevo_item_tienda') }}" class="alert-link">Crea el primer item</a>.
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

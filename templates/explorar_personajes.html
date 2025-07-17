@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Explorar Personajes - Expediente Digital{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container text-center">
+        <h1 class="display-4 mb-3">
+            <i class="fas fa-search me-3"></i>
+            Explorar Personajes
+        </h1>
+        <p class="lead mb-4">Descubre personajes de todas las dimensiones y planetas</p>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-light btn-lg">
+                <i class="fas fa-arrow-left me-2"></i>Volver a Mis Personajes
+            </a>
+            <a href="{{ url_for('listar_clanes') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-users me-2"></i>Explorar Clanes
+            </a>
+            <a href="{{ url_for('nuevo_clan') }}" class="btn btn-success btn-lg">
+                <i class="fas fa-plus me-2"></i>Crear Clan
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="container mb-4">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title mb-3">
+                <i class="fas fa-filter me-2"></i>Filtros de Búsqueda
+            </h5>
+            <form method="GET" action="{{ url_for('explorar_personajes') }}" id="filtrosForm">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="dimension" class="form-label">Dimensión</label>
+                        <select class="form-select" id="dimension" name="dimension" onchange="togglePlanetaFilter()">
+                            <option value="">Todas las dimensiones</option>
+                            {% for dim in dimensiones %}
+                                <option value="{{ dim }}" {% if filtro_dimension == dim %}selected{% endif %}>{{ dim }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3" id="planetaFilter" style="display: none;">
+                        <label for="planeta" class="form-label">Planeta</label>
+                        <select class="form-select" id="planeta" name="planeta">
+                            <option value="">Todos los planetas</option>
+                            {% for p in planetas %}
+                                <option value="{{ p }}" {% if filtro_planeta == p %}selected{% endif %}>{{ p }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="busqueda" class="form-label">Buscar por nombre</label>
+                        <input type="text" class="form-control" id="busqueda" name="busqueda" 
+                               value="{{ busqueda }}" placeholder="Nombre del personaje...">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-search me-1"></i>Buscar
+                        </button>
+                        <a href="{{ url_for('explorar_personajes') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>Limpiar Filtros
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Resultados -->
+<div class="container">
+    {% if personajes %}
+        <div class="row mb-3">
+            <div class="col-12">
+                <h4>
+                    <i class="fas fa-list me-2"></i>
+                    Resultados ({{ personajes|length }} personajes encontrados)
+                </h4>
+            </div>
+        </div>
+        
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for personaje in personajes %}
+            <div class="col">
+                <div class="card personaje-card h-100">
+                    {% if personaje.foto %}
+                        <img src="{{ url_for('static', filename=personaje.foto) }}" class="card-img-top" alt="{{ personaje.nombre }}" style="height: 250px; object-fit: contain; background-color: #f8f9fa;">
+                    {% else %}
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 250px;">
+                            <i class="fas fa-user fa-4x text-muted"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="card-body">
+                        <h5 class="card-title">{{ personaje.nombre }}</h5>
+                        <p class="card-text text-muted">
+                            <i class="fas fa-globe me-1"></i>{{ personaje.dimension }}
+                        </p>
+                        {% if personaje.dimension == 'Universo' %}
+                        <p class="card-text text-muted">
+                            <i class="fas fa-planet-ringed me-1"></i>{{ personaje.planeta if personaje.planeta else 'N/A' }}
+                        </p>
+                        {% endif %}
+                        <p class="card-text">
+                            <i class="fas fa-birthday-cake me-1"></i>{{ personaje.edad }} años
+                        </p>
+                        <p class="card-text">
+                            <span class="badge bg-warning text-dark me-1">{{ personaje.rango }}</span>
+                            <span class="badge nivel-{{ personaje.nivel_auto|lower }}">{{ personaje.nivel_auto }}</span>
+                            {% if personaje.clan %}
+                            <span class="badge bg-info">
+                                <i class="fas fa-users me-1"></i>{{ personaje.clan.nombre }}
+                            </span>
+                            {% endif %}
+                        </p>
+                        <p class="card-text">{{ personaje.descripcion[:100] }}{% if personaje.descripcion|length > 100 %}...{% endif %}</p>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                {% if personaje.armas_nuevas %}
+                                    <span class="badge bg-primary me-1">
+                                        <i class="fas fa-sword me-1"></i>{{ personaje.armas_nuevas|length }} Armas
+                                    </span>
+                                {% endif %}
+                                {% if personaje.invocaciones_nuevas %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-magic me-1"></i>{{ personaje.invocaciones_nuevas|length }} Invocaciones
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer bg-transparent border-0">
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('ver_personaje', personaje_id=personaje.id) }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-eye me-1"></i>Ver Detalles
+                            </a>
+                            {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('editar_personaje', personaje_id=personaje.id) }}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ personaje.id }}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal de confirmación de eliminación -->
+            {% if session.user_id and (session.es_admin or personaje.creador_id == session.user_id) %}
+            <div class="modal fade" id="deleteModal{{ personaje.id }}" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Confirmar Eliminación</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>¿Estás seguro de que deseas eliminar al personaje <strong>{{ personaje.nombre }}</strong>?</p>
+                            <p class="text-danger"><small>Esta acción no se puede deshacer.</small></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <form action="{{ url_for('eliminar_personaje', personaje_id=personaje.id) }}" method="POST" style="display: inline;">
+                                <button type="submit" class="btn btn-danger">Eliminar</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <div class="card">
+                <div class="card-body py-5">
+                    <i class="fas fa-search fa-5x text-muted mb-4"></i>
+                    <h3 class="text-muted">No se encontraron personajes</h3>
+                    <p class="text-muted mb-4">Intenta ajustar los filtros de búsqueda</p>
+                    <a href="{{ url_for('explorar_personajes') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-times me-2"></i>Limpiar Filtros
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function togglePlanetaFilter() {
+    const dimension = document.getElementById('dimension').value;
+    const planetaFilter = document.getElementById('planetaFilter');
+    const planetaSelect = document.getElementById('planeta');
+    
+    if (dimension === 'Universo') {
+        planetaFilter.style.display = 'block';
+        // Cargar planetas dinámicamente si es necesario
+        if (planetaSelect.options.length <= 1) {
+            fetch(`/api/planetas/${dimension}`)
+                .then(response => response.json())
+                .then(planetas => {
+                    planetaSelect.innerHTML = '<option value="">Todos los planetas</option>';
+                    planetas.forEach(planeta => {
+                        const option = document.createElement('option');
+                        option.value = planeta.nombre;
+                        option.textContent = planeta.nombre;
+                        planetaSelect.appendChild(option);
+                    });
+                });
+        }
+    } else {
+        planetaFilter.style.display = 'none';
+        planetaSelect.value = '';
+    }
+}
+
+// Ejecutar al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    togglePlanetaFilter();
+});
+</script>
+{% endblock %} 

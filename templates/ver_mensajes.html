@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Mensajes de {{ personaje.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+            {% if personaje.foto %}
+                <img src="{{ url_for('static', filename=personaje.foto) }}" 
+                     class="rounded-circle me-3" 
+                     alt="{{ personaje.nombre }}" 
+                     style="width: 60px; height: 60px; object-fit: cover;">
+            {% else %}
+                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-3" 
+                     style="width: 60px; height: 60px;">
+                    <i class="fas fa-user fa-2x text-white"></i>
+                </div>
+            {% endif %}
+            <div>
+                <h2 class="mb-0">{{ personaje.nombre }}</h2>
+                <p class="text-muted mb-0">{{ personaje.dimension }} - {{ personaje.rango }}</p>
+            </div>
+        </div>
+        <a href="{{ url_for('nuevo_mensaje') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Nuevo Mensaje
+        </a>
+    </div>
+
+    <!-- Pestañas -->
+    <ul class="nav nav-tabs mb-4" id="mensajesTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="recibidos-tab" data-bs-toggle="tab" data-bs-target="#recibidos" type="button" role="tab">
+                <i class="fas fa-inbox me-1"></i>Recibidos ({{ mensajes_recibidos|length }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="enviados-tab" data-bs-toggle="tab" data-bs-target="#enviados" type="button" role="tab">
+                <i class="fas fa-paper-plane me-1"></i>Enviados ({{ mensajes_enviados|length }})
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="mensajesTabContent">
+        <!-- Mensajes Recibidos -->
+        <div class="tab-pane fade show active" id="recibidos" role="tabpanel">
+            {% if mensajes_recibidos %}
+                <div class="list-group">
+                    {% for mensaje in mensajes_recibidos %}
+                    <div class="list-group-item list-group-item-action {% if not mensaje.leido %}list-group-item-warning{% endif %}">
+                        <div class="d-flex w-100 justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-2">
+                                    <h6 class="mb-0 me-2">{{ mensaje.asunto }}</h6>
+                                    {% if not mensaje.leido %}
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="fas fa-envelope me-1"></i>Nuevo
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <p class="mb-1 text-muted">
+                                    <i class="fas fa-user me-1"></i>De: {{ mensaje.remitente.nombre }}
+                                </p>
+                                <p class="mb-1">{{ mensaje.contenido[:100] }}{% if mensaje.contenido|length > 100 %}...{% endif %}</p>
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>{{ mensaje.fecha_envio.strftime('%d/%m/%Y %H:%M') }}
+                                </small>
+                            </div>
+                            <div class="ms-3">
+                                <a href="{{ url_for('leer_mensaje', mensaje_id=mensaje.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <form method="POST" action="{{ url_for('eliminar_mensaje', mensaje_id=mensaje.id) }}" class="d-inline" onsubmit="return confirm('¿Eliminar este mensaje?')">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No hay mensajes recibidos</h5>
+                    <p class="text-muted">Este personaje aún no ha recibido ningún mensaje.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Mensajes Enviados -->
+        <div class="tab-pane fade" id="enviados" role="tabpanel">
+            {% if mensajes_enviados %}
+                <div class="list-group">
+                    {% for mensaje in mensajes_enviados %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ mensaje.asunto }}</h6>
+                                <p class="mb-1 text-muted">
+                                    <i class="fas fa-user me-1"></i>Para: {{ mensaje.destinatario.nombre }}
+                                </p>
+                                <p class="mb-1">{{ mensaje.contenido[:100] }}{% if mensaje.contenido|length > 100 %}...{% endif %}</p>
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>{{ mensaje.fecha_envio.strftime('%d/%m/%Y %H:%M') }}
+                                    {% if mensaje.leido %}
+                                        <span class="badge bg-success ms-2">
+                                            <i class="fas fa-check me-1"></i>Leído
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary ms-2">
+                                            <i class="fas fa-clock me-1"></i>No leído
+                                        </span>
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <div class="ms-3">
+                                <a href="{{ url_for('leer_mensaje', mensaje_id=mensaje.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-paper-plane fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No hay mensajes enviados</h5>
+                    <p class="text-muted">Este personaje aún no ha enviado ningún mensaje.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ url_for('mensajes') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Volver a Mensajería
+        </a>
+    </div>
+</div>
+{% endblock %} 

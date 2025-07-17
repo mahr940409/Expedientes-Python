@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Detalle del Ítem - {{ item.nombre }} - {{ personaje.nombre }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Inicio</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('ver_personaje', personaje_id=personaje.id) }}">{{ personaje.nombre }}</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('tienda_personaje', personaje_id=personaje.id) }}">Tienda</a></li>
+                <li class="breadcrumb-item active">{{ item.nombre }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            {% if item.imagen %}
+            <img src="{{ url_for('static', filename=item.imagen) }}" class="card-img-top" alt="{{ item.nombre }}" style="height: 250px; object-fit: contain; background-color: #f8f9fa;">
+            {% endif %}
+            <div class="card-body">
+                <h3 class="card-title">{{ item.nombre }}</h3>
+                <p class="card-text">{{ item.descripcion }}</p>
+                
+                <div class="mb-3">
+                    {% if item.es_unico %}
+                        {% if compra_en_venta %}
+                            <span class="badge bg-warning text-dark me-2">
+                                <i class="fas fa-tag"></i> {{ compra_en_venta.precio_venta }} rastamonios (precio de venta)
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark me-2">
+                                <i class="fas fa-coins"></i> {{ item.precio }} rastamonios
+                            </span>
+                        {% endif %}
+                        <span class="badge bg-danger">
+                            <i class="fas fa-star"></i> Único
+                        </span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark me-2">
+                            <i class="fas fa-coins"></i> {{ item.precio }} rastamonios
+                        </span>
+                    {% endif %}
+                    {% if item.poder_adicional > 0 %}
+                    <span class="badge bg-info">
+                        <i class="fas fa-fist-raised"></i> +{{ item.poder_adicional }} poder
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <!-- Información del personaje -->
+                <div class="alert alert-info">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-user me-2"></i>
+                            <strong>{{ personaje.nombre }}</strong>
+                        </div>
+                        <div>
+                            <i class="fas fa-coins me-2"></i>
+                            <strong>{{ personaje.rastamonios }}</strong> rastamonios disponibles
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                {% if ya_comprado %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>{{ personaje.nombre }}</strong> ya posee este ítem.
+                    </div>
+                    <a href="{{ url_for('tienda_personaje', personaje_id=personaje.id) }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left me-2"></i>Volver a la tienda
+                    </a>
+                {% elif item.es_unico %}
+                    {% if compra_en_venta %}
+                        <form method="POST" action="{{ url_for('comprar_unico_en_venta', compra_id=compra_en_venta.id, personaje_id=personaje.id) }}">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-tag me-2"></i>
+                                Este ítem está en venta por <strong>{{ compra_en_venta.precio_venta }} rastamonios</strong>.
+                            </div>
+                            
+                            {% if personaje.rastamonios >= compra_en_venta.precio_venta %}
+                                <button type="submit" class="btn btn-success" 
+                                        onclick="return confirm('¿Comprar {{ item.nombre }} por {{ compra_en_venta.precio_venta }} rastamonios?')">
+                                    <i class="fas fa-shopping-cart me-2"></i>Comprar por {{ compra_en_venta.precio_venta }} rastamonios
+                                </button>
+                            {% else %}
+                                <button type="submit" class="btn btn-secondary" disabled>
+                                    <i class="fas fa-times me-2"></i>Rastamonios insuficientes
+                                </button>
+                            {% endif %}
+                            
+                            <a href="{{ url_for('tienda_personaje', personaje_id=personaje.id) }}" class="btn btn-outline-secondary ms-2">
+                                <i class="fas fa-arrow-left me-2"></i>Volver a la tienda
+                            </a>
+                        </form>
+                    {% else %}
+                        <form method="POST" action="{{ url_for('comprar_item') }}">
+                            <input type="hidden" name="item_id" value="{{ item.id }}">
+                            <input type="hidden" name="personaje_id" value="{{ personaje.id }}">
+                            
+                            {% if personaje.rastamonios >= item.precio %}
+                                <button type="submit" class="btn btn-success" 
+                                        onclick="return confirm('¿Comprar {{ item.nombre }} por {{ item.precio }} rastamonios?')">
+                                    <i class="fas fa-shopping-cart me-2"></i>Comprar por {{ item.precio }} rastamonios
+                                </button>
+                            {% else %}
+                                <button type="submit" class="btn btn-secondary" disabled>
+                                    <i class="fas fa-times me-2"></i>Rastamonios insuficientes
+                                </button>
+                            {% endif %}
+                            
+                            <a href="{{ url_for('tienda_personaje', personaje_id=personaje.id) }}" class="btn btn-outline-secondary ms-2">
+                                <i class="fas fa-arrow-left me-2"></i>Volver a la tienda
+                            </a>
+                        </form>
+                    {% endif %}
+                {% else %}
+                    <form method="POST" action="{{ url_for('comprar_item') }}">
+                        <input type="hidden" name="item_id" value="{{ item.id }}">
+                        <input type="hidden" name="personaje_id" value="{{ personaje.id }}">
+                        
+                        {% if personaje.rastamonios >= item.precio %}
+                            <button type="submit" class="btn btn-success" 
+                                    onclick="return confirm('¿Comprar {{ item.nombre }} por {{ item.precio }} rastamonios?')">
+                                <i class="fas fa-shopping-cart me-2"></i>Comprar por {{ item.precio }} rastamonios
+                            </button>
+                        {% else %}
+                            <button type="submit" class="btn btn-secondary" disabled>
+                                <i class="fas fa-times me-2"></i>Rastamonios insuficientes
+                            </button>
+                        {% endif %}
+                        
+                        <a href="{{ url_for('tienda_personaje', personaje_id=personaje.id) }}" class="btn btn-outline-secondary ms-2">
+                            <i class="fas fa-arrow-left me-2"></i>Volver a la tienda
+                        </a>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

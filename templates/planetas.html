@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Planetas - Expediente Digital{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Inicio</a></li>
+                <li class="breadcrumb-item active">Planetas</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2>
+                <i class="fas fa-globe me-2"></i>
+                Gestión de Planetas
+            </h2>
+            {% if session.user_id %}
+            <a href="{{ url_for('nuevo_planeta') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Nuevo Planeta
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if planetas %}
+    <div class="row">
+        {% for planeta in planetas %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-planet-ringed me-2"></i>
+                        {{ planeta.nombre }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong><i class="fas fa-globe me-1"></i>Dimensión:</strong>
+                        <span class="badge bg-secondary">{{ planeta.dimension }}</span>
+                    </div>
+                    
+                    {% if planeta.descripcion %}
+                    <div class="mb-3">
+                        <strong><i class="fas fa-align-left me-1"></i>Descripción:</strong>
+                        <p class="text-muted mt-1">{{ planeta.descripcion }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <strong><i class="fas fa-users me-1"></i>Personajes:</strong>
+                        <span class="badge bg-primary">{{ planeta.num_personajes }}</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong><i class="fas fa-calendar me-1"></i>Creado:</strong>
+                        <small class="text-muted">{{ planeta.fecha_creacion.strftime('%d/%m/%Y') }}</small>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-transparent border-0">
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('ver_planeta', planeta_id=planeta.id) }}" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-eye me-1"></i>Ver detalles
+                        </a>
+                        {% if session.user_id and session.es_admin %}
+                        <a href="{{ url_for('editar_planeta', planeta_id=planeta.id) }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-edit me-1"></i>Editar
+                        </a>
+                        {% endif %}
+                        {% if session.user_id and session.es_admin %}
+                            {% if planeta.num_personajes == 0 %}
+                            <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ planeta.id }}">
+                                <i class="fas fa-trash me-1"></i>Eliminar
+                            </button>
+                            {% else %}
+                            <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="No se puede eliminar porque tiene personajes asociados">
+                                <i class="fas fa-trash me-1"></i>Eliminar
+                            </button>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal de confirmación de eliminación -->
+        <div class="modal fade" id="deleteModal{{ planeta.id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirmar Eliminación</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>¿Estás seguro de que deseas eliminar el planeta <strong>{{ planeta.nombre }}</strong>?</p>
+                        <p class="text-danger"><small>Esta acción no se puede deshacer.</small></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <form action="{{ url_for('eliminar_planeta', planeta_id=planeta.id) }}" method="POST" style="display: inline;">
+                            <button type="submit" class="btn btn-danger">Eliminar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <div class="card">
+            <div class="card-body py-5">
+                <i class="fas fa-globe fa-5x text-muted mb-4"></i>
+                <h3 class="text-muted">No hay planetas registrados</h3>
+                <p class="text-muted mb-4">Comienza creando tu primer planeta para el universo</p>
+                {% if session.user_id %}
+                <a href="{{ url_for('nuevo_planeta') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus me-2"></i>Crear Primer Planeta
+                </a>
+                {% else %}
+                <p class="text-muted">Debes iniciar sesión para crear planetas</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %} 

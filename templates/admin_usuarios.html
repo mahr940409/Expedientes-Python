@@ -1,0 +1,486 @@
+{% extends "base.html" %}
+
+{% block title %}Administrar Usuarios{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Modal personalizado sin parpadeo */
+.custom-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+}
+
+.custom-modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(3px);
+}
+
+.custom-modal-dialog {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 500px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.custom-modal-content {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.custom-modal-header {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.custom-modal-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.custom-modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6c757d;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.custom-modal-close:hover {
+    color: #000;
+}
+
+.custom-modal-body {
+    padding: 1rem;
+}
+
+.custom-modal-footer {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+/* Prevenir parpadeo en botones */
+.btn-group .btn {
+    position: relative;
+    z-index: 1;
+}
+
+/* Mejorar la apariencia de los badges */
+.badge {
+    font-size: 0.875em;
+    padding: 0.5em 0.75em;
+}
+
+/* Estilos para formularios en modales */
+.form-select-lg {
+    font-size: 1.1rem;
+    padding: 0.75rem 1rem;
+}
+
+.form-label.fw-bold {
+    font-weight: 600;
+    color: #495057;
+}
+
+/* Estilos para botones de acción */
+.btn-outline-primary,
+.btn-outline-success,
+.btn-outline-danger,
+.btn-outline-warning {
+    border-width: 2px;
+    font-weight: 500;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4">Administrar Usuarios</h1>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Lista de Usuarios</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Email</th>
+                                    <th>Nivel Actual</th>
+                                    <th>Personajes</th>
+                                    <th>Límite</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for usuario in usuarios %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ usuario.username }}</strong>
+                                        {% if usuario.es_admin %}
+                                            <span class="badge bg-danger ms-2">Admin</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ usuario.email or 'No especificado' }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'primary' if usuario.nivel_usuario == 'normal' else 'success' if usuario.nivel_usuario == 'premium' else 'warning' if usuario.nivel_usuario == 'vip' else 'danger' }}">
+                                            {{ usuario.nivel_usuario.title() }}
+                                        </span>
+                                    </td>
+                                    <td>{{ usuario.num_personajes }}</td>
+                                    <td>
+                                        {{ usuario.limite_actual }}
+                                        {% if usuario.slots_comprados > 0 %}
+                                            <br><small class="text-muted">(+{{ usuario.slots_comprados }} comprados)</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if usuario.num_personajes >= usuario.limite_actual %}
+                                            <span class="badge bg-danger">Límite alcanzado</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Puede crear más</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            {% if not usuario.es_admin %}
+                                            <button type="button" class="btn btn-sm btn-outline-primary modal-trigger" data-target="modalNivel{{ usuario.id }}">
+                                                Cambiar Nivel
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-success modal-trigger" data-target="modalAdmin{{ usuario.id }}">
+                                                Dar Admin
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger modal-trigger" data-target="modalEliminar{{ usuario.id }}">
+                                                Eliminar
+                                            </button>
+                                            {% else %}
+                                            <span class="text-muted me-2">Admin</span>
+                                            <button type="button" class="btn btn-sm btn-outline-warning modal-trigger" data-target="modalQuitarAdmin{{ usuario.id }}">
+                                                Quitar Admin
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Modal para cambiar nivel -->
+                                {% if not usuario.es_admin %}
+                                <div class="custom-modal" id="modalNivel{{ usuario.id }}" style="display: none;">
+                                    <div class="custom-modal-backdrop"></div>
+                                    <div class="custom-modal-dialog">
+                                        <div class="custom-modal-content">
+                                            <div class="custom-modal-header">
+                                                <h5 class="custom-modal-title">Cambiar Nivel de {{ usuario.username }}</h5>
+                                                <button type="button" class="custom-modal-close" onclick="closeModal('modalNivel{{ usuario.id }}')">&times;</button>
+                                            </div>
+                                            <form method="POST" action="{{ url_for('cambiar_nivel_usuario', usuario_id=usuario.id) }}" id="formNivel{{ usuario.id }}">
+                                                <div class="custom-modal-body">
+                                                    <div class="row mb-3">
+                                                        <div class="col-6">
+                                                            <strong>Nivel actual:</strong><br>
+                                                            <span class="badge bg-{{ 'primary' if usuario.nivel_usuario == 'normal' else 'success' if usuario.nivel_usuario == 'premium' else 'warning' if usuario.nivel_usuario == 'vip' else 'danger' }}">
+                                                                {{ usuario.nivel_usuario.title() }}
+                                                            </span>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <strong>Personajes:</strong><br>
+                                                            <span class="text-{{ 'danger' if usuario.num_personajes >= usuario.limite_actual else 'success' }}">
+                                                                {{ usuario.num_personajes }}/{{ usuario.limite_actual }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="mb-3">
+                                                        <label for="nivel{{ usuario.id }}" class="form-label fw-bold">Nuevo Nivel:</label>
+                                                        <select class="form-select form-select-lg" id="nivel{{ usuario.id }}" name="nivel" required>
+                                                            <option value="normal" {{ 'selected' if usuario.nivel_usuario == 'normal' }}>Normal (3 personajes)</option>
+                                                            <option value="premium" {{ 'selected' if usuario.nivel_usuario == 'premium' }}>Premium (5 personajes)</option>
+                                                            <option value="vip" {{ 'selected' if usuario.nivel_usuario == 'vip' }}>VIP (8 personajes)</option>
+                                                            <option value="legendario" {{ 'selected' if usuario.nivel_usuario == 'legendario' }}>Legendario (12 personajes)</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="custom-modal-footer">
+                                                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalNivel{{ usuario.id }}')">Cancelar</button>
+                                                    <button type="submit" class="btn btn-primary">
+                                                        <i class="fas fa-save me-1"></i>Cambiar Nivel
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Modal para dar admin -->
+                                <div class="custom-modal" id="modalAdmin{{ usuario.id }}" style="display: none;">
+                                    <div class="custom-modal-backdrop"></div>
+                                    <div class="custom-modal-dialog">
+                                        <div class="custom-modal-content">
+                                            <div class="custom-modal-header">
+                                                <h5 class="custom-modal-title">Dar Permisos de Administrador</h5>
+                                                <button type="button" class="custom-modal-close" onclick="closeModal('modalAdmin{{ usuario.id }}')">&times;</button>
+                                            </div>
+                                            <form method="POST" action="{{ url_for('toggle_admin_usuario', usuario_id=usuario.id) }}">
+                                                <div class="custom-modal-body">
+                                                    <div class="alert alert-warning">
+                                                        <i class="fas fa-exclamation-triangle"></i>
+                                                        <strong>¡Advertencia!</strong> Al dar permisos de administrador a {{ usuario.username }}, tendrá acceso completo al sistema.
+                                                    </div>
+                                                    <p>¿Estás seguro de que quieres dar permisos de administrador a <strong>{{ usuario.username }}</strong>?</p>
+                                                    <p>Esta acción le permitirá:</p>
+                                                    <ul>
+                                                        <li>Gestionar usuarios</li>
+                                                        <li>Crear y editar misiones</li>
+                                                        <li>Gestionar la tienda</li>
+                                                        <li>Acceder a todas las funciones administrativas</li>
+                                                    </ul>
+                                                    <input type="hidden" name="accion" value="dar_admin">
+                                                </div>
+                                                <div class="custom-modal-footer">
+                                                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalAdmin{{ usuario.id }}')">Cancelar</button>
+                                                    <button type="submit" class="btn btn-success">Dar Permisos de Admin</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Modal para eliminar usuario -->
+                                <div class="custom-modal" id="modalEliminar{{ usuario.id }}" style="display: none;">
+                                    <div class="custom-modal-backdrop"></div>
+                                    <div class="custom-modal-dialog">
+                                        <div class="custom-modal-content">
+                                            <div class="custom-modal-header">
+                                                <h5 class="custom-modal-title">Eliminar Usuario</h5>
+                                                <button type="button" class="custom-modal-close" onclick="closeModal('modalEliminar{{ usuario.id }}')">&times;</button>
+                                            </div>
+                                            <form method="POST" action="{{ url_for('eliminar_usuario', usuario_id=usuario.id) }}">
+                                                <div class="custom-modal-body">
+                                                    <div class="alert alert-danger">
+                                                        <i class="fas fa-exclamation-triangle"></i>
+                                                        <strong>¡Acción Irreversible!</strong> Esta acción eliminará permanentemente al usuario y todos sus datos.
+                                                    </div>
+                                                    <p>Usuario: <strong>{{ usuario.username }}</strong></p>
+                                                    <p>Personajes: <strong>{{ usuario.num_personajes }}</strong></p>
+                                                    <p>Esta acción solo debe realizarse en caso de infracciones graves de las normas.</p>
+                                                    
+                                                    <div class="mb-3">
+                                                        <label for="motivo{{ usuario.id }}" class="form-label">Motivo de la eliminación:</label>
+                                                        <textarea class="form-control" id="motivo{{ usuario.id }}" name="motivo" rows="3" required placeholder="Especifica el motivo de la eliminación..."></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="custom-modal-footer">
+                                                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalEliminar{{ usuario.id }}')">Cancelar</button>
+                                                    <button type="submit" class="btn btn-danger">Eliminar Usuario</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Modal para quitar admin -->
+                                {% if usuario.es_admin %}
+                                <div class="custom-modal" id="modalQuitarAdmin{{ usuario.id }}" style="display: none;">
+                                    <div class="custom-modal-backdrop"></div>
+                                    <div class="custom-modal-dialog">
+                                        <div class="custom-modal-content">
+                                            <div class="custom-modal-header">
+                                                <h5 class="custom-modal-title">Quitar Permisos de Administrador</h5>
+                                                <button type="button" class="custom-modal-close" onclick="closeModal('modalQuitarAdmin{{ usuario.id }}')">&times;</button>
+                                            </div>
+                                            <form method="POST" action="{{ url_for('toggle_admin_usuario', usuario_id=usuario.id) }}">
+                                                <div class="custom-modal-body">
+                                                    <div class="alert alert-warning">
+                                                        <i class="fas fa-exclamation-triangle"></i>
+                                                        <strong>¡Advertencia!</strong> Al quitar los permisos de administrador de {{ usuario.username }}, perderá acceso a las funciones administrativas.
+                                                    </div>
+                                                    <p>¿Estás seguro de que quieres quitar los permisos de administrador de <strong>{{ usuario.username }}</strong>?</p>
+                                                    <input type="hidden" name="accion" value="quitar_admin">
+                                                </div>
+                                                <div class="custom-modal-footer">
+                                                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalQuitarAdmin{{ usuario.id }}')">Cancelar</button>
+                                                    <button type="submit" class="btn btn-warning">Quitar Permisos de Admin</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Información de Niveles</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h6 class="text-primary">Normal</h6>
+                                <p class="mb-1">3 personajes</p>
+                                <small class="text-muted">Nivel básico</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h6 class="text-success">Premium</h6>
+                                <p class="mb-1">5 personajes</p>
+                                <small class="text-muted">Nivel intermedio</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h6 class="text-warning">VIP</h6>
+                                <p class="mb-1">8 personajes</p>
+                                <small class="text-muted">Nivel avanzado</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h6 class="text-danger">Legendario</h6>
+                                <p class="mb-1">12 personajes</p>
+                                <small class="text-muted">Nivel máximo</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Políticas de Gestión</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> Directrices para Administradores</h6>
+                        <ul class="mb-0">
+                            <li><strong>Eliminación de usuarios:</strong> Solo por infracciones graves de las normas</li>
+                            <li><strong>Permisos de admin:</strong> Otorgar solo a usuarios de confianza</li>
+                            <li><strong>Cambio de niveles:</strong> Para mejorar la experiencia del usuario</li>
+                        </ul>
+                    </div>
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-shield-alt"></i> Medidas de Seguridad</h6>
+                        <ul class="mb-0">
+                            <li>No se pueden eliminar cuentas de administrador</li>
+                            <li>No se puede modificar el propio estado de admin</li>
+                            <li>Todas las acciones quedan registradas</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Funciones para modal personalizado
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Usar la nueva clase modal-trigger
+    const modalButtons = document.querySelectorAll('.modal-trigger');
+    modalButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const targetId = this.getAttribute('data-target');
+            openModal(targetId);
+        });
+    });
+    
+    // Cerrar modal al hacer clic en el backdrop
+    const modals = document.querySelectorAll('.custom-modal');
+    modals.forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this || e.target.classList.contains('custom-modal-backdrop')) {
+                closeModal(this.id);
+            }
+        });
+    });
+    
+    // Prevenir múltiples envíos
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn && !submitBtn.disabled) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Procesando...';
+            }
+        });
+    });
+});
+</script>
+{% endblock %} 

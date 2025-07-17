@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Elementos - Expediente Digital{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Inicio</a></li>
+                <li class="breadcrumb-item active">Elementos</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2>
+                <i class="fas fa-fire me-2"></i>
+                Gestión de Elementos
+            </h2>
+            {% if session.user_id and session.es_admin %}
+            <a href="{{ url_for('nuevo_elemento') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Nuevo Elemento
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if elementos %}
+    <div class="row">
+        {% for elemento in elementos %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header {% if elemento.es_basico %}bg-success{% else %}bg-warning{% endif %} text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-fire me-2"></i>
+                        {{ elemento.nombre }}
+                        {% if elemento.es_basico %}
+                            <span class="badge bg-light text-success ms-2">
+                                <i class="fas fa-check-circle me-1"></i>Básico
+                            </span>
+                        {% else %}
+                            <span class="badge bg-light text-warning ms-2">
+                                <i class="fas fa-clock me-1"></i>Avanzado
+                            </span>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if elemento.descripcion %}
+                    <div class="mb-3">
+                        <strong><i class="fas fa-align-left me-1"></i>Descripción:</strong>
+                        <p class="text-muted mt-1">{{ elemento.descripcion }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <strong><i class="fas fa-calendar me-1"></i>Creado:</strong>
+                        <small class="text-muted">{{ elemento.fecha_creacion.strftime('%d/%m/%Y') }}</small>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-transparent border-0">
+                    {% if session.user_id and session.es_admin %}
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ elemento.id }}">
+                            <i class="fas fa-trash me-1"></i>Eliminar
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal de confirmación de eliminación -->
+        <div class="modal fade" id="deleteModal{{ elemento.id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirmar Eliminación</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>¿Estás seguro de que deseas eliminar el elemento <strong>{{ elemento.nombre }}</strong>?</p>
+                        <p class="text-danger"><small>Esta acción no se puede deshacer.</small></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <form action="{{ url_for('eliminar_elemento', elemento_id=elemento.id) }}" method="POST" style="display: inline;">
+                            <button type="submit" class="btn btn-danger">Eliminar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <div class="card">
+            <div class="card-body py-5">
+                <i class="fas fa-fire fa-5x text-muted mb-4"></i>
+                <h3 class="text-muted">No hay elementos registrados</h3>
+                <p class="text-muted mb-4">Comienza creando tu primer elemento</p>
+                {% if session.user_id and session.es_admin %}
+                <a href="{{ url_for('nuevo_elemento') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus me-2"></i>Crear Primer Elemento
+                </a>
+                {% else %}
+                <p class="text-muted">Solo los administradores pueden crear elementos</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %} 
