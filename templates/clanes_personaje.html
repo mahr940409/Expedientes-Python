@@ -77,8 +77,7 @@
                     </a>
                     
                     {% if personaje.clan_id != clan.id %}
-                    <form action="{{ url_for('solicitar_unirse_clan') }}" method="POST">
-                        <input type="hidden" name="clan_id" value="{{ clan.id }}">
+                    <form action="{{ url_for('solicitar_unirse_clan', clan_id=clan.id) }}" method="POST">
                         <input type="hidden" name="personaje_id" value="{{ personaje.id }}">
                         <button type="submit" class="btn btn-success w-100" 
                                 onclick="return confirm('¿Solicitar unirse al clan {{ clan.nombre }}?')">

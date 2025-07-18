@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}Gestionar Clan - {{ clan.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('listar_clanes') }}">Clanes</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('ver_clan', clan_id=clan.id) }}">{{ clan.nombre }}</a></li>
+                    <li class="breadcrumb-item active">Gestionar</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="mb-0">
+                    <i class="fas fa-cogs text-primary"></i>
+                    Gestionar Clan: {{ clan.nombre }}
+                </h1>
+                <a href="{{ url_for('ver_clan', clan_id=clan.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-1"></i>Volver al Clan
+                </a>
+            </div>
+            
+            <!-- Solicitudes Pendientes -->
+            {% if solicitudes_pendientes %}
+            <div class="card mb-4 border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-clock me-2"></i>Solicitudes Pendientes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Personaje</th>
+                                    <th>Usuario</th>
+                                    <th>Mensaje</th>
+                                    <th>Fecha</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for solicitud in solicitudes_pendientes %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if solicitud.personaje.foto %}
+                                            <img src="{{ url_for('static', filename=solicitud.personaje.foto) }}" 
+                                                 alt="{{ solicitud.personaje.nombre }}" 
+                                                 class="me-2" 
+                                                 style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;">
+                                            {% else %}
+                                            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" 
+                                                 style="width: 40px; height: 40px;">
+                                                <i class="fas fa-user text-white"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <strong>{{ solicitud.personaje.nombre }}</strong><br>
+                                                <small class="text-muted">{{ solicitud.personaje.rango }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ solicitud.personaje.creador.username }}</td>
+                                    <td>
+                                        {% if solicitud.mensaje %}
+                                        {{ solicitud.mensaje[:50] }}{% if solicitud.mensaje|length > 50 %}...{% endif %}
+                                        {% else %}
+                                        <span class="text-muted">Sin mensaje</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ solicitud.fecha_solicitud.strftime('%d/%m/%Y %H:%M') }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <form method="POST" action="{{ url_for('aceptar_solicitud_clan', solicitud_id=solicitud.id) }}" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('¿Aceptar a {{ solicitud.personaje.nombre }} en el clan?')">
+                                                    <i class="fas fa-check"></i> Aceptar
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="{{ url_for('rechazar_solicitud_clan', solicitud_id=solicitud.id) }}" class="d-inline ms-1">
+                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Rechazar la solicitud de {{ solicitud.personaje.nombre }}?')">
+                                                    <i class="fas fa-times"></i> Rechazar
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Miembros del Clan -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2"></i>Miembros del Clan
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if miembros %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Personaje</th>
+                                    <th>Usuario</th>
+                                    <th>Jerarquía</th>
+                                    <th>Poder</th>
+                                    <th>Ingreso</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for membresia in miembros %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if membresia.personaje.foto %}
+                                            <img src="{{ url_for('static', filename=membresia.personaje.foto) }}" 
+                                                 alt="{{ membresia.personaje.nombre }}" 
+                                                 class="me-2" 
+                                                 style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;">
+                                            {% else %}
+                                            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" 
+                                                 style="width: 40px; height: 40px;">
+                                                <i class="fas fa-user text-white"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <strong>{{ membresia.personaje.nombre }}</strong><br>
+                                                <small class="text-muted">{{ membresia.personaje.rango }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ membresia.personaje.creador.username }}</td>
+                                    <td>
+                                        {% if membresia.personaje.id == clan.creador_id %}
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="fas fa-crown me-1"></i>Líder
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-info">{{ membresia.jerarquia.title() }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">{{ membresia.personaje.poder_total }}</span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ membresia.fecha_ingreso.strftime('%d/%m/%Y') }}</small>
+                                    </td>
+                                    <td>
+                                        {% if membresia.personaje.id != clan.creador_id %}
+                                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#cambiarJerarquiaModal{{ membresia.personaje.id }}">
+                                            <i class="fas fa-edit"></i> Cambiar Rango
+                                        </button>
+                                        {% else %}
+                                        <span class="text-muted">Líder del clan</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-users fa-2x text-muted mb-3"></i>
+                        <h5 class="text-muted">No hay miembros en este clan</h5>
+                        <p class="text-muted">Este clan aún no tiene miembros.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modales para cambiar jerarquía -->
+{% for membresia in miembros %}
+{% if membresia.personaje.id != clan.creador_id %}
+<div class="modal fade" id="cambiarJerarquiaModal{{ membresia.personaje.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit text-primary me-2"></i>Cambiar Jerarquía
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('cambiar_jerarquia_clan', clan_id=clan.id, personaje_id=membresia.personaje.id) }}" method="POST">
+                <div class="modal-body">
+                    <p><strong>Personaje:</strong> {{ membresia.personaje.nombre }}</p>
+                    <p><strong>Jerarquía actual:</strong> {{ membresia.jerarquia.title() }}</p>
+                    
+                    <div class="mb-3">
+                        <label for="jerarquia{{ membresia.personaje.id }}" class="form-label">Nueva jerarquía:</label>
+                        <select class="form-select" id="jerarquia{{ membresia.personaje.id }}" name="jerarquia" required>
+                            <option value="">Seleccionar jerarquía...</option>
+                            <option value="miembro" {% if membresia.jerarquia == 'miembro' %}selected{% endif %}>Miembro</option>
+                            <option value="elite" {% if membresia.jerarquia == 'elite' %}selected{% endif %}>Élite</option>
+                            <option value="colider" {% if membresia.jerarquia == 'colider' %}selected{% endif %}>Colíder</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Guardar Cambio
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+{% endblock %} 

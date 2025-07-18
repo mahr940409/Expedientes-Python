@@ -1947,9 +1947,10 @@ def clanes_personaje_contextual(personaje_id):
 def ver_clan(clan_id):
     """Ver información detallada de un clan"""
     clan = Clan.query.get_or_404(clan_id)
-    miembros = Personaje.query.filter_by(clan_id=clan_id).order_by(Personaje.nombre).all()
+    # Obtener miembros con información de jerarquía
+    membresias = MiembroClan.query.filter_by(clan_id=clan_id).join(MiembroClan.personaje).order_by(Personaje.nombre).all()
     
-    return render_template('ver_clan.html', clan=clan, miembros=miembros)
+    return render_template('ver_clan.html', clan=clan, membresias=membresias)
 
 @app.route('/clan/nuevo', methods=['GET', 'POST'])
 @login_required
@@ -2097,7 +2098,10 @@ def solicitudes_clan():
     
     # Solicitudes recibidas (si el usuario es líder de algún clan)
     solicitudes_recibidas = []
-    clanes_lider = Clan.query.filter_by(creador_id=Personaje.query.filter_by(creador_id=user.id).first().id).all()
+    # Obtener todos los personajes del usuario
+    personajes_usuario = Personaje.query.filter_by(creador_id=user.id).all()
+    # Obtener todos los clanes donde el usuario es líder (a través de cualquiera de sus personajes)
+    clanes_lider = Clan.query.filter(Clan.creador_id.in_([p.id for p in personajes_usuario])).all()
     for clan in clanes_lider:
         solicitudes = SolicitudClan.query.filter_by(clan_id=clan.id, estado='pendiente').all()
         solicitudes_recibidas.extend(solicitudes)
@@ -2115,7 +2119,13 @@ def aceptar_solicitud_clan(solicitud_id):
     
     # Verificar que el usuario es líder del clan
     clan = Clan.query.get(solicitud.clan_id)
-    if not clan or clan.creador.creador_id != user.id:
+    if not clan:
+        flash('Clan no encontrado', 'error')
+        return redirect(url_for('solicitudes_clan'))
+    
+    # Verificar que el usuario es líder del clan (a través de cualquiera de sus personajes)
+    personajes_usuario = Personaje.query.filter_by(creador_id=user.id).all()
+    if clan.creador_id not in [p.id for p in personajes_usuario]:
         flash('No tienes permisos para aceptar solicitudes de este clan', 'error')
         return redirect(url_for('solicitudes_clan'))
     
@@ -2155,7 +2165,13 @@ def rechazar_solicitud_clan(solicitud_id):
     
     # Verificar que el usuario es líder del clan
     clan = Clan.query.get(solicitud.clan_id)
-    if not clan or clan.creador.creador_id != user.id:
+    if not clan:
+        flash('Clan no encontrado', 'error')
+        return redirect(url_for('solicitudes_clan'))
+    
+    # Verificar que el usuario es líder del clan (a través de cualquiera de sus personajes)
+    personajes_usuario = Personaje.query.filter_by(creador_id=user.id).all()
+    if clan.creador_id not in [p.id for p in personajes_usuario]:
         flash('No tienes permisos para rechazar solicitudes de este clan', 'error')
         return redirect(url_for('solicitudes_clan'))
     
@@ -2177,7 +2193,13 @@ def gestionar_clan(clan_id):
     user = Usuario.query.get(session['user_id'])
     
     # Verificar que el usuario es líder del clan
-    if not clan or clan.creador.creador_id != user.id:
+    if not clan:
+        flash('Clan no encontrado', 'error')
+        return redirect(url_for('listar_clanes'))
+    
+    # Verificar que el usuario es líder del clan (a través de cualquiera de sus personajes)
+    personajes_usuario = Personaje.query.filter_by(creador_id=user.id).all()
+    if clan.creador_id not in [p.id for p in personajes_usuario]:
         flash('No tienes permisos para gestionar este clan', 'error')
         return redirect(url_for('listar_clanes'))
     
@@ -2198,7 +2220,13 @@ def cambiar_jerarquia_clan(clan_id, personaje_id):
     nueva_jerarquia = request.form.get('jerarquia')
     
     # Verificar que el usuario es líder del clan
-    if not clan or clan.creador.creador_id != user.id:
+    if not clan:
+        flash('Clan no encontrado', 'error')
+        return redirect(url_for('gestionar_clan', clan_id=clan_id))
+    
+    # Verificar que el usuario es líder del clan (a través de cualquiera de sus personajes)
+    personajes_usuario = Personaje.query.filter_by(creador_id=user.id).all()
+    if clan.creador_id not in [p.id for p in personajes_usuario]:
         flash('No tienes permisos para cambiar jerarquías en este clan', 'error')
         return redirect(url_for('gestionar_clan', clan_id=clan_id))
     

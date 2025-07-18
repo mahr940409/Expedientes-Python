@@ -44,7 +44,7 @@
                             
                             <div class="row text-center">
                                 <div class="col-6">
-                                    <h6 class="text-primary">{{ miembros|length }}</h6>
+                                    <h6 class="text-primary">{{ membresias|length }}</h6>
                                     <small class="text-muted">Miembros</small>
                                 </div>
                                 <div class="col-6">
@@ -69,6 +69,16 @@
                                     <span class="badge bg-danger">Inactivo</span>
                                     {% endif %}
                                 </small>
+                                
+                                <!-- Botón de gestión para el líder -->
+                                {% if session.user_id and clan.creador.creador_id == session.user_id %}
+                                <hr>
+                                <div class="d-grid">
+                                    <a href="{{ url_for('gestionar_clan', clan_id=clan.id) }}" class="btn btn-warning btn-sm">
+                                        <i class="fas fa-cogs me-1"></i>Gestionar Clan
+                                    </a>
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -83,7 +93,7 @@
                             </h4>
                         </div>
                         <div class="card-body">
-                            {% if miembros %}
+                            {% if membresias %}
                             <div class="table-responsive">
                                 <table class="table table-hover">
                                     <thead class="table-dark">
@@ -96,13 +106,13 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for miembro in miembros %}
+                                        {% for membresia in membresias %}
                                         <tr>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    {% if miembro.foto %}
-                                                    <img src="{{ url_for('static', filename=miembro.foto) }}" 
-                                                         alt="{{ miembro.nombre }}" 
+                                                    {% if membresia.personaje.foto %}
+                                                    <img src="{{ url_for('static', filename=membresia.personaje.foto) }}" 
+                                                         alt="{{ membresia.personaje.nombre }}" 
                                                          class="me-2" 
                                                          style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;">
                                                     {% else %}
@@ -112,26 +122,26 @@
                                                     </div>
                                                     {% endif %}
                                                     <div>
-                                                        <strong>{{ miembro.nombre }}</strong><br>
-                                                        <small class="text-muted">{{ miembro.rango }}</small>
+                                                        <strong>{{ membresia.personaje.nombre }}</strong><br>
+                                                        <small class="text-muted">{{ membresia.personaje.rango }}</small>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td>{{ miembro.creador.username }}</td>
+                                            <td>{{ membresia.personaje.creador.username }}</td>
                                             <td>
-                                                {% if miembro.id == clan.creador_id %}
+                                                {% if membresia.personaje.id == clan.creador_id %}
                                                 <span class="badge bg-warning text-dark">
                                                     <i class="fas fa-crown me-1"></i>Líder
                                                 </span>
                                                 {% else %}
-                                                <span class="badge bg-info">Miembro</span>
+                                                <span class="badge bg-info">{{ membresia.jerarquia.title() }}</span>
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                <span class="badge bg-success">{{ miembro.poder_total }}</span>
+                                                <span class="badge bg-success">{{ membresia.personaje.poder_total }}</span>
                                             </td>
                                             <td>
-                                                <small class="text-muted">{{ miembro.fecha_creacion.strftime('%d/%m/%Y') }}</small>
+                                                <small class="text-muted">{{ membresia.fecha_ingreso.strftime('%d/%m/%Y') }}</small>
                                             </td>
                                         </tr>
                                         {% endfor %}
